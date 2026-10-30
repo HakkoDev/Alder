@@ -1,6 +1,7 @@
-import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { test } from "node:test";
+
 const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 test("GitHub worktree checkout and paginated API commands registered", () => {
     const rust = read("src-tauri/src/github/mod.rs");

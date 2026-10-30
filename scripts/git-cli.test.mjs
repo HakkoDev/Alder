@@ -1,9 +1,9 @@
-import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, writeFileSync, rmSync, mkdirSync, readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { spawnSync } from "node:child_process";
+import { test } from "node:test";
 
 function run(cwd, ...args) {
     const result = spawnSync("git", ["-C", cwd, ...args], { encoding: "utf8" });

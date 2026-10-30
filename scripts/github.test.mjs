@@ -1,7 +1,8 @@
-import { rustSource } from "./rust-source.mjs";
-import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import test from "node:test";
+import { rustSource } from "./rust-source.mjs";
+
 const core = rustSource();
 const api = readFileSync(new URL("../src/lib/git-api.ts", import.meta.url), "utf8");
 const ui = readFileSync(new URL("../src/components/GitHubPanel.tsx", import.meta.url), "utf8");
@@ -16,11 +17,11 @@ test("GitHub commands are registered and use argv-only gh process", () => {
         "github_pr_review",
         "github_pr_checks",
     ]) {
-        assert.match(core, new RegExp("fn " + s + "\\("));
+        assert.match(core, new RegExp("fn " + s + "\\s*\\("));
         assert.match(core.slice(core.lastIndexOf("generate_handler!")), new RegExp(s));
     }
     assert.match(core, /Command::new\("gh"\)/);
-    assert.match(core, /cmd\.args\(args\)/);
+    assert.match(core, /cmd\s*\.args\(args\)/);
     assert.doesNotMatch(core, /sh -c|cmd \/C/);
 });
 test("GitHub UI uses native invoke and error states", () => {

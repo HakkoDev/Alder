@@ -1,14 +1,15 @@
-import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import test from "node:test";
+
 const root = new URL("../", import.meta.url);
 const file = (path) => readFileSync(new URL(path, root), "utf8");
 test("command search is in header, adjacent to settings and not the sidebar", () => {
     const app = file("src/App.tsx");
     const sidebar = app.slice(app.indexOf("<SidebarHeader>"), app.indexOf("</SidebarHeader>"));
-    const header = app.slice(app.indexOf('<header className="topbar">'), app.indexOf("</header>"));
+    const header = app.match(/<header\s+className="topbar">[\s\S]*?<\/header>/)?.[0] ?? "";
     assert.doesNotMatch(sidebar, /quick-search/);
-    assert.match(header, /<SidebarTrigger\/>\s*<div className="crumb">/);
+    assert.match(header, /<SidebarTrigger\s*\/>\s*<div\s+className="crumb">/);
     assert.match(header, /topbar-command-search/);
     assert.match(header, /setPalette\(true\)/);
 });

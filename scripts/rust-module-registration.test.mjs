@@ -1,7 +1,8 @@
-import { test } from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
+import { test } from "node:test";
+
 const root = path.resolve("src-tauri/src");
 function collect(dir) {
     return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {

@@ -1,52 +1,91 @@
 use rusqlite::{params, Connection};
 use serde::Serialize;
 use std::fs;
+use std::io::Write;
 use std::path::{Component, Path, PathBuf};
 use std::process::{Command, Output, Stdio};
-use std::io::Write;
 use tauri::{Manager, State};
 use uuid::Uuid;
 
-struct AppState { db: PathBuf }
+struct AppState {
+    db: PathBuf,
+}
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct Workspace { id: String, name: String, color: String }
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct Repository {
-    id: String, name: String, path: String, workspace_id: Option<String>, branch: String,
-    modified: usize, staged: usize, ahead: usize, behind: usize, available: bool,
+struct Workspace {
+    id: String,
+    name: String,
+    color: String,
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct Change { path: String, index_status: String, worktree_status: String, staged: bool, unstaged: bool, untracked: bool }
+struct Repository {
+    id: String,
+    name: String,
+    path: String,
+    workspace_id: Option<String>,
+    branch: String,
+    modified: usize,
+    staged: usize,
+    ahead: usize,
+    behind: usize,
+    available: bool,
+}
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct RepoStatus { path: String, branch: String, upstream: Option<String>, ahead: usize, behind: usize, changes: Vec<Change> }
+struct Change {
+    path: String,
+    index_status: String,
+    worktree_status: String,
+    staged: bool,
+    unstaged: bool,
+    untracked: bool,
+}
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct Commit { hash: String, short_hash: String, parents: Vec<String>, author: String, date: String, subject: String, refs: String }
+struct RepoStatus {
+    path: String,
+    branch: String,
+    upstream: Option<String>,
+    ahead: usize,
+    behind: usize,
+    changes: Vec<Change>,
+}
 #[derive(Serialize)]
-struct Branch { name: String, current: bool, remote: bool }
-
+#[serde(rename_all = "camelCase")]
+struct Commit {
+    hash: String,
+    short_hash: String,
+    parents: Vec<String>,
+    author: String,
+    date: String,
+    subject: String,
+    refs: String,
+}
+#[derive(Serialize)]
+struct Branch {
+    name: String,
+    current: bool,
+    remote: bool,
+}
 
 mod git;
-mod repository;
 mod github;
+mod repository;
 
 use git::*;
 use repository::*;
 
-pub fn run(){
+pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
-        .setup(|app|{
-            let dir=app.path().app_data_dir()?;
+        .setup(|app| {
+            let dir = app.path().app_data_dir()?;
             fs::create_dir_all(&dir)?;
-            let db=dir.join("alder.sqlite");
+            let db = dir.join("alder.sqlite");
             database(&db).map_err(std::io::Error::other)?;
-            app.manage(AppState{db});
+            app.manage(AppState { db });
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

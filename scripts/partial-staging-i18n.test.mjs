@@ -1,10 +1,11 @@
-import { rustSource } from "./rust-source.mjs";
-import test from "node:test";
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { spawnSync } from "node:child_process";
+import test from "node:test";
+import { rustSource } from "./rust-source.mjs";
+
 const root = new URL("../", import.meta.url);
 const read = (p) => fs.readFileSync(new URL(p, root), "utf8");
 const git = (cwd, args, stdin) => {
@@ -15,10 +16,10 @@ const git = (cwd, args, stdin) => {
 test("partial-stage backend validates patches and only applies to index", () => {
     const src = rustSource();
     assert.match(src, /fn apply_diff_selection\(/);
-    assert.match(src, /\["apply","--cached","--recount","--unidiff-zero"\]/);
+    assert.match(src, /\["apply",\s*"--cached",\s*"--recount",\s*"--unidiff-zero"\]/);
     assert.match(src, /cmd\.arg\("--check"\)/);
     assert.match(src, /cmd\.arg\("--reverse"\)/);
-    assert.match(read("src/App.tsx"), /onSelect=\{\(hunk,line\)/);
+    assert.match(read("src/App.tsx"), /onSelect=\{\(hunk,\s*line\)/);
 });
 test("selected line patch stages only one addition then can unstage it", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "alder-partial-"));

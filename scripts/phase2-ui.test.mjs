@@ -1,10 +1,11 @@
-import { rustSource } from "./rust-source.mjs";
-import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, mkdtempSync, mkdirSync, writeFileSync, rmSync, chmodSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { execFileSync } from "node:child_process";
+import { test } from "node:test";
+import { rustSource } from "./rust-source.mjs";
+
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const git = (cwd, ...args) => execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] }).trim();
 const fixture = (callback) => {

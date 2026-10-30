@@ -1,7 +1,8 @@
-import { rustSource } from "./rust-source.mjs";
-import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { test } from "node:test";
+import { rustSource } from "./rust-source.mjs";
+
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 test("desktop commands are wired and Git is invoked as argv, not shell interpolation", () => {
     const rust = rustSource(),
@@ -30,7 +31,7 @@ test("desktop commands are wired and Git is invoked as argv, not shell interpola
     }
     assert.match(rust, /Command::new\("git"\)/);
     assert.doesNotMatch(rust, /\.shell\s*\(/);
-    assert.match(rust, /"pull","--ff-only"/);
+    assert.match(rust, /"pull",\s*"--ff-only"/);
 });
 test("theme preset engine and Morrow conventions are preserved", () => {
     const t = read("src/lib/theme-presets.ts");

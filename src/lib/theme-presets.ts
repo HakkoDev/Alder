@@ -2040,21 +2040,47 @@ const styledTweakcnPresets = Object.fromEntries(
 
 // Alder-only palette: color overrides, preserving all Morrow typography, spacing,
 // radius and other non-color theme settings. The original presets remain available.
-const alderPalette = preset("Alder", {
-    background: "#F5F7FB", foreground: "#182238", primary: "#526FC8",
-    primaryForeground: "#FFFFFF", secondary: "#E9EDF5", secondaryForeground: "#263653",
-    mutedForeground: "#62718A", accent: "#DCE5F5", accentForeground: "#263D70",
-    border: "#D9DFEA", card: "#FFFFFF", sidebar: "#EFF2F8",
-    sidebarForeground: "#22304C", sidebarAccent: "#E0E8F6",
-    destructive: "#C34659", ring: "#526FC8"
-}, {
-    background: "#0D121D", foreground: "#E8EDF7", primary: "#92A9F4",
-    primaryForeground: "#111A30", secondary: "#202A3E", secondaryForeground: "#E3EAF7",
-    mutedForeground: "#99A7BC", accent: "#243553", accentForeground: "#DCE6FF",
-    border: "#273248", card: "#151D2B", popover: "#192337",
-    sidebar: "#101724", sidebarForeground: "#DFE6F5", sidebarAccent: "#202E49",
-    sidebarBorder: "#253047", destructive: "#EF7985", ring: "#92A9F4"
-});
+const alderPalette = preset(
+    "Alder",
+    {
+        background: "#F5F7FB",
+        foreground: "#182238",
+        primary: "#526FC8",
+        primaryForeground: "#FFFFFF",
+        secondary: "#E9EDF5",
+        secondaryForeground: "#263653",
+        mutedForeground: "#62718A",
+        accent: "#DCE5F5",
+        accentForeground: "#263D70",
+        border: "#D9DFEA",
+        card: "#FFFFFF",
+        sidebar: "#EFF2F8",
+        sidebarForeground: "#22304C",
+        sidebarAccent: "#E0E8F6",
+        destructive: "#C34659",
+        ring: "#526FC8",
+    },
+    {
+        background: "#0D121D",
+        foreground: "#E8EDF7",
+        primary: "#92A9F4",
+        primaryForeground: "#111A30",
+        secondary: "#202A3E",
+        secondaryForeground: "#E3EAF7",
+        mutedForeground: "#99A7BC",
+        accent: "#243553",
+        accentForeground: "#DCE6FF",
+        border: "#273248",
+        card: "#151D2B",
+        popover: "#192337",
+        sidebar: "#101724",
+        sidebarForeground: "#DFE6F5",
+        sidebarAccent: "#202E49",
+        sidebarBorder: "#253047",
+        destructive: "#EF7985",
+        ring: "#92A9F4",
+    },
+);
 
 export const themePresets = {
     alder: {
