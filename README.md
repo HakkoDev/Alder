@@ -18,7 +18,7 @@ Alder is a local-first Git desktop client built on Tauri v2 + Rust + React + Typ
 
 ## Requirements
 
-- Bun **or** Node/npm supported by the bundled Vite / TypeScript versions (see `package.json`).
+- Bun **or** Node/npm supported by the bundled Vite / TypeScript versions (see `package.json`); use Node 22.18+ for the Node test suite (CI uses Node 24).
 - Rust stable + Cargo and the OS dependencies required by Tauri v2.
 - Git 2.23+ installed and accessible on `PATH`.
 - Windows 10/11 initially targeted.

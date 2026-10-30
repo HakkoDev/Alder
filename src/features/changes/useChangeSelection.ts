@@ -1,14 +1,22 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
+import { useShallow } from "zustand/react/shallow";
 import type { Change } from "../../lib/types";
-
-export type ChangeSort = "path" | "name" | "status";
-export type ChangeDirection = "asc" | "desc";
+import { useChangesStore } from "./changes-store";
 
 export function useChangeSelection(listedChanges: Change[]) {
-    const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
-    const [changeSort, setChangeSort] = useState<ChangeSort>("path");
-    const [changeDirection, setChangeDirection] = useState<ChangeDirection>("asc");
-    const [selectionAnchor, setSelectionAnchor] = useState<string | null>(null);
+    const { selectedFiles, setSelectedFiles, changeSort, setChangeSort, changeDirection, setChangeDirection, selectionAnchor, setSelectionAnchor } =
+        useChangesStore(
+            useShallow((state) => ({
+                selectedFiles: state.selectedFiles,
+                setSelectedFiles: state.setSelectedFiles,
+                changeSort: state.changeSort,
+                setChangeSort: state.setChangeSort,
+                changeDirection: state.changeDirection,
+                setChangeDirection: state.setChangeDirection,
+                selectionAnchor: state.selectionAnchor,
+                setSelectionAnchor: state.setSelectionAnchor,
+            })),
+        );
 
     const orderChanges = useCallback(
         (items: Change[]) =>

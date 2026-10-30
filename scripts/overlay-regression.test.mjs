@@ -16,11 +16,14 @@ test("dialogs have one centering transform and explicit overlay background", () 
     assert.match(d, /alder-dialog-overlay/);
 });
 test("custom App close buttons suppress built-in close and palette has only escape", () => {
-    const app = read("../src/App.tsx");
-    for (const label of ["danger-explanation", "alder-modal-description"])
-        assert.match(app, new RegExp('Dialog\\.DialogContent\\s+hideClose\\s+className="modal-content"\\s+aria-describedby="' + label + '"'));
-    assert.match(app, /Dialog\.DialogContent\s+hideClose\s+className="modal-content settings-content"/);
-    assert.match(app, /Dialog\.DialogContent\s+hideClose\s+className="modal-content palette-content"/);
+    for (const [path, label] of [
+        ["../src/components/app/dialogs/DangerDialog.tsx", "danger-explanation"],
+        ["../src/features/repositories/components/RepositoryDialog.tsx", "alder-modal-description"],
+    ]) {
+        assert.match(read(path), new RegExp('Dialog\\.DialogContent\\s+hideClose\\s+className="modal-content"\\s+aria-describedby="' + label + '"'));
+    }
+    assert.match(read("../src/components/app/dialogs/SettingsDialog.tsx"), /Dialog\.DialogContent\s+hideClose\s+className="modal-content settings-content"/);
+    assert.match(read("../src/components/app/dialogs/CommandPalette.tsx"), /Dialog\.DialogContent\s+hideClose\s+className="modal-content palette-content"/);
 });
 
 test("top-level dropdown content also receives opaque portal class", () => {

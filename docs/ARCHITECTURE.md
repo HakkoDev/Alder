@@ -30,9 +30,12 @@ This was structured after the user's Morrow v0.2.0 source archive, particularly 
 
 ## Frontend boundaries
 
-- `src/App.tsx` composes navigation, repository registration, action dialogs, and workflow views.
-- `src/features/repositories/useRepositoryData.ts` owns prioritized repository loading and request epochs; `src/features/changes/useChangeSelection.ts` owns changes sorting and selection.
-- `src/components/app/` contains focused controls, settings, diff rendering, and file rows. `src/components/ui/` owns shared Radix-based primitives.
+- `src/App.tsx` is a stateless composition root for the application shell and dialogs. `src/features/app/useAppController.ts` coordinates native actions, feedback, repository data, and domain hooks without rendering JSX.
+- Zustand owns shared client state in three small stores: `features/app/navigation-store.ts` (navigation, search, active repository, palette/settings visibility), `features/repositories/registry-store.ts` (repository/workspace registry and loading flags), and `features/changes/changes-store.ts` (file selection, sorting, active diff side, commit draft/options). Components subscribe through narrow selectors and `useShallow`, rather than receiving copies of this state through the root.
+- Only the last repository ID is persisted by the new stores, using the existing `alder.last-repo` key. Registry data remains backed by SQLite; commit drafts, diff content, credentials, and operation state are not persisted to browser storage. The existing preferences/theme and locale stores retain their own persistence.
+- `src/features/repositories/useRepositoryData.ts` owns prioritized repository loading and request epochs. Async response data stays in this lifecycle-aware hook, not in a second global cache. `useRepositoryDialog.ts` owns local add/scan/clone/workspace/branch form state.
+- `src/features/changes/useChangeSelection.ts` derives sorted staged/unstaged lists from repository status and the Zustand selection state. Repository transitions clear active files, selected paths, and selection anchors while retaining commit drafts and sort preferences. `useChangesPane.ts` owns pane width and cleans up pointer listeners on completion, cancellation, and unmount.
+- `src/components/app/` contains shell components, focused display controls, and application dialogs. Feature views live under `features/repositories/components/`, `features/changes/components/`, `features/history/`, and `features/branches/`. `src/components/ui/` owns shared Radix-based primitives.
 - `src/components/AdvancedGit.tsx`, `GitHubPanel.tsx`, and `GitHubExtras.tsx` contain workflow-specific panels. `src/lib/git-api.ts` is the typed native IPC boundary.
 - Native modules and command registration are described in [RUST_ARCHITECTURE.md](RUST_ARCHITECTURE.md); CI and signing are described in [RELEASING.md](RELEASING.md).
 

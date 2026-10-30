@@ -5,9 +5,8 @@ import test from "node:test";
 const root = new URL("../", import.meta.url);
 const file = (path) => readFileSync(new URL(path, root), "utf8");
 test("command search is in header, adjacent to settings and not the sidebar", () => {
-    const app = file("src/App.tsx");
-    const sidebar = app.slice(app.indexOf("<SidebarHeader>"), app.indexOf("</SidebarHeader>"));
-    const header = app.match(/<header\s+className="topbar">[\s\S]*?<\/header>/)?.[0] ?? "";
+    const sidebar = file("src/components/app/AppSidebar.tsx");
+    const header = file("src/components/app/AppHeader.tsx");
     assert.doesNotMatch(sidebar, /quick-search/);
     assert.match(header, /<SidebarTrigger\s*\/>\s*<div\s+className="crumb">/);
     assert.match(header, /topbar-command-search/);

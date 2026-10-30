@@ -34,4 +34,6 @@ bun run tauri:build
 
 ## Repository organization validation
 
-Local Windows checks pass: all 47 Node/source/Git/release tests, TypeScript, Vite production build, Biome CI, locked Cargo check/test, rustfmt, Clippy with warnings denied, and `bun run tauri build --debug --no-bundle`. Cargo currently contains no Rust unit tests; the Git operation fixtures are Node-driven. Biome reports existing CSS/style warnings, and Vite reports a large bundle warning. GUI, live GitHub, signed packaging, and Linux runner validation remain outstanding.
+Local Windows checks pass: all 54 Node/source/Git/release/store tests, TypeScript, Vite production build, Biome CI, locked Cargo check/test, rustfmt, Clippy with warnings denied, and `bun run tauri build --debug --no-bundle`. Cargo currently contains no Rust unit tests; the Git operation fixtures are Node-driven. Biome reports existing CSS/style warnings, and Vite reports a large bundle warning. GUI, live GitHub, signed packaging, and Linux runner validation remain outstanding.
+
+`scripts/stores.test.mjs` exercises real Zustand store actions: functional updates, legacy repository-ID persistence, denied storage, immutable registry updates, selection reset semantics, retained commit drafts/options, and independence of store subscriptions. `scripts/app-architecture.test.mjs` guards the composition/domain boundaries. Node 22.18+ is required for native TypeScript loading in these store tests; CI uses Node 24.

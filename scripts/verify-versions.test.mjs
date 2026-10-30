@@ -10,7 +10,7 @@ const cargo = read("src-tauri/Cargo.toml");
 
 test("application versions and Tauri pins are aligned", () => {
     assert.deepEqual(validateVersions(pkg, config, cargo, `v${pkg.version}`), []);
-    assert.ok(read("src/App.tsx").includes(`Alder v${pkg.version}`));
+    assert.ok(read("src/components/app/AppFooter.tsx").includes(`Alder v${pkg.version}`));
 });
 
 test("release validation rejects version and tag mismatches", () => {

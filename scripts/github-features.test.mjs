@@ -14,7 +14,7 @@ test("GitHub worktree checkout and paginated API commands registered", () => {
 test("React components are split and Morrow does not appear in user-facing UI", () => {
     const app = read("src/App.tsx");
     const settings = read("src/components/app/Settings.tsx");
-    assert.ok(app.includes("./components/app/Settings"));
+    assert.ok(read("src/components/app/dialogs/SettingsDialog.tsx").includes("components/app/Settings"));
     assert.ok(read("src/components/GitHubPanel.tsx").includes("GitHubExtras"));
     assert.doesNotMatch(app, /Morrow/i);
     assert.doesNotMatch(settings, /Morrow/i);

@@ -19,7 +19,7 @@ test("partial-stage backend validates patches and only applies to index", () => 
     assert.match(src, /\["apply",\s*"--cached",\s*"--recount",\s*"--unidiff-zero"\]/);
     assert.match(src, /cmd\.arg\("--check"\)/);
     assert.match(src, /cmd\.arg\("--reverse"\)/);
-    assert.match(read("src/App.tsx"), /onSelect=\{\(hunk,\s*line\)/);
+    assert.match(read("src/features/changes/components/DiffPanel.tsx"), /onSelect=\{\(hunk,\s*line\)/);
 });
 test("selected line patch stages only one addition then can unstage it", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "alder-partial-"));
@@ -52,9 +52,8 @@ test("selected line patch stages only one addition then can unstage it", () => {
     }
 });
 test("changes sorting and localization are plumbed through UI", () => {
-    const app = read("src/App.tsx");
-    assert.match(app, /setChangeSort/);
-    assert.match(app, /t\("app.search"\)/);
+    assert.match(read("src/features/changes/components/ChangeList.tsx"), /setChangeSort/);
+    assert.match(read("src/components/app/AppHeader.tsx"), /t\("app.search"\)/);
     assert.match(read("src/components/app/Settings.tsx"), /setLocale\(/);
     assert.match(read("src/lib/i18n/en.ts"), /"changes\.stageLine"/);
 });

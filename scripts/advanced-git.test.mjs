@@ -111,7 +111,7 @@ test("custom Alder palette is default and font style is inherited rather than ch
     assert.match(t, /alder: \{/);
     assert.match(t, /styledTweakcnPresets\["sage-garden"\]\.light\.style/);
     assert.match(read("src/lib/preferences.ts"), /themeId: "alder"/);
-    assert.match(read("src/App.tsx"), /Copyright © Hakko &amp; Contributors/);
+    assert.match(read("src/components/app/AppSidebar.tsx"), /Copyright © Hakko &amp; Contributors/);
 });
 test("conflict stages, manual resolved result and worktree locking use valid Git commands", () =>
     fixture(({ repo, base }) => {

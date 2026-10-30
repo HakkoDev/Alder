@@ -61,24 +61,19 @@ test("force-with-lease refuses to overwrite a remote advanced by a different clo
         assert.equal(git(b, "rev-parse", "HEAD"), git(dir, "--git-dir", bare, "rev-parse", "refs/heads/main"));
     }));
 test("menus, workspace switcher, connected diff pane and interactive footer are wired in source", () => {
-    const ui = read("src/App.tsx");
     const api = read("src/lib/git-api.ts");
     const rust = rustSource();
-    for (const phrase of [
-        "workspace-switcher",
-        "ContextMenuTrigger",
-        "Remove from Alder",
-        "changes-divider",
-        "selectedFiles",
-        "FooterAction",
-        "GitGraph commits",
-        "pull-rebase",
-        "force-push",
-        "skipHooks",
-        "signoff",
-        "Copyright © Hakko &amp; Contributors",
-    ])
-        assert.ok(ui.includes(phrase), phrase);
+    for (const [path, phrases] of [
+        ["src/components/app/AppSidebar.tsx", ["workspace-switcher", "ContextMenuTrigger", "Remove from Alder", "Copyright © Hakko &amp; Contributors"]],
+        ["src/features/changes/components/ChangesView.tsx", ["changes-divider"]],
+        ["src/features/changes/components/ChangeList.tsx", ["selectedFiles"]],
+        ["src/components/app/AppFooter.tsx", ["FooterAction"]],
+        ["src/features/history/HistoryView.tsx", ["GitGraph commits"]],
+        ["src/features/repositories/components/RepositoryHeader.tsx", ["pull-rebase", "force-push"]],
+        ["src/features/changes/components/CommitForm.tsx", ["skipHooks", "signoff"]],
+    ]) {
+        for (const phrase of phrases) assert.ok(read(path).includes(phrase), `${path}: ${phrase}`);
+    }
     for (const cmd of ["git_network", "list_remotes", "remove_repository", "create_commit"]) assert.match(rust, new RegExp(`\\b${cmd}\\b`));
     assert.match(rust, /"--force-with-lease"/);
     assert.match(rust, /"--no-verify"/);
