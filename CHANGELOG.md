@@ -1,3 +1,11 @@
+## 0.3.6 — Frontend organization and shared state
+
+- Reduced `App.tsx` to a composition root, extracting layout, dialogs, and repository workflow views into focused components.
+- Added Zustand stores for shared navigation, repository/workspace registry, file selection, and commit drafts/options, using narrow subscriptions.
+- Retained request epochs and stale-response protection in the repository data hook; kept transient dialog forms local.
+- Added store behavior and architecture regression tests, and updated source contracts to follow the new component boundaries.
+- Canonicalized Git fixture paths to support Windows runner aliases and short paths.
+
 ## 0.3.5 — Development tooling and release preparation
 
 - Organized the previously uncommitted application into dependency-ordered Conventional Commits without rewriting existing history.

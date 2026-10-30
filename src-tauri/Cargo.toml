@@ -1,6 +1,6 @@
 [package]
 name = "alder-git"
-version = "0.3.5"
+version = "0.3.6"
 description = "Alder, a fast local-first Git client built on Tauri and Rust"
 authors = ["Alder Contributors"]
 license = "GPL-3.0-only"
