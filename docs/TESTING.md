@@ -30,4 +30,8 @@ bun run tauri:build
 
 ## CI preview
 
-`.github/workflows/verify-windows.yml` is an **unsigned preview build** workflow, not an auto-publishing release. It is newly authored, has not run, and must be validated in a real GitHub repository. The release pipeline and updater must remain disabled until signing and smoke tests are done.
+`.github/workflows/build-windows.yml` verifies sources and Rust on Windows; manual dispatch can produce an unsigned preview installer. `.github/workflows/release.yml` builds signed Windows/Linux draft releases after tag and signing-key validation. Neither workflow has been exercised on GitHub as part of this work. Configure signing and complete native smoke tests before publishing; see [RELEASING.md](RELEASING.md).
+
+## Repository organization validation
+
+Local Windows checks pass: all 47 Node/source/Git/release tests, TypeScript, Vite production build, Biome CI, locked Cargo check/test, rustfmt, Clippy with warnings denied, and `bun run tauri build --debug --no-bundle`. Cargo currently contains no Rust unit tests; the Git operation fixtures are Node-driven. Biome reports existing CSS/style warnings, and Vite reports a large bundle warning. GUI, live GitHub, signed packaging, and Linux runner validation remain outstanding.
