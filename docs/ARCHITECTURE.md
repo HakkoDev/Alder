@@ -25,8 +25,16 @@ This was structured after the user's Morrow v0.2.0 source archive, particularly 
 - Repository roots are normalized via `git rev-parse --show-toplevel` and checked for actual on-disk availability.
 - File actions only accept relative paths without `..` components; destructive operations are intentionally limited in Phase 1.
 - Network Git operations run in the Tauri blocking thread pool. Fetches prune stale remote-tracking refs; pulls require fast-forward. No automatic background polling.
-- Theme tokens, palette definitions and style mechanics are copied from Morrow; Alder preferences use an independent `alder.preferences.v1` key and never mutate Morrow settings.
-- Offline-first: GitHub/GitLab integrations are absent, not silently emulated.
+- Theme tokens, palette definitions and style mechanics are copied from Morrow; Alder preferences use an independent `alder.preferences.v2` key, migrate the earlier v1 key, and never mutate Morrow settings.
+- Offline-first: Git workflows do not require a provider account. Optional GitHub integration delegates authentication and API access to the installed `gh` executable; GitLab integration is absent.
+
+## Frontend boundaries
+
+- `src/App.tsx` composes navigation, repository registration, action dialogs, and workflow views.
+- `src/features/repositories/useRepositoryData.ts` owns prioritized repository loading and request epochs; `src/features/changes/useChangeSelection.ts` owns changes sorting and selection.
+- `src/components/app/` contains focused controls, settings, diff rendering, and file rows. `src/components/ui/` owns shared Radix-based primitives.
+- `src/components/AdvancedGit.tsx`, `GitHubPanel.tsx`, and `GitHubExtras.tsx` contain workflow-specific panels. `src/lib/git-api.ts` is the typed native IPC boundary.
+- Native modules and command registration are described in [RUST_ARCHITECTURE.md](RUST_ARCHITECTURE.md); CI and signing are described in [RELEASING.md](RELEASING.md).
 
 ## Known architectural work for later phases
 

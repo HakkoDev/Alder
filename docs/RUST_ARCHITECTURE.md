@@ -43,4 +43,4 @@ src-tauri/src/
 
 ## Verification caveat
 
-The 31 available Node/Git fixture and source-contract tests pass after the refactor, but Cargo/Rust and a native Tauri build are not available in the current environment. Verify on a development machine with `cargo fmt --check --manifest-path src-tauri/Cargo.toml`, `cargo check --manifest-path src-tauri/Cargo.toml`, `bun run typecheck`, `bun run test`, and `bun run tauri:dev` before calling this refactor native-verified.
+Local Windows validation now passes locked Cargo check/test, rustfmt, Clippy with warnings denied, TypeScript, the Vite build, 47 Node/source/Git/release tests, and the Tauri debug application build without bundling. Cargo currently has no Rust unit tests; Node runs disposable Git fixtures. Packaged GUI smoke tests, live provider tests, signed release builds, and Linux validation are still required before release.

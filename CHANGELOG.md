@@ -1,3 +1,12 @@
+## 0.3.5 — Development tooling and release preparation
+
+- Organized the previously uncommitted application into dependency-ordered Conventional Commits without rewriting existing history.
+- Removed unused alternate UI implementations, redundant Rust exports, and phase-history comment noise; formatted frontend and Rust sources.
+- Fixed Windows Git fixtures, stale hook source contracts, accessible controls, and frontend hook dependencies.
+- Aligned app versions and added release-tag checks.
+- Ported Morrow's Windows verification, Linux lockfile-refresh PRs, Dependabot, release-note categories, and signed Windows/Linux draft-release automation with Alder-specific safety checks.
+- Local source/build/Rust checks pass; GitHub-hosted workflows, signing, and GUI smoke testing remain unverified.
+
 ## v0.3.3 — UI polish and Rust quality workflows
 
 - Repositioned command search to the header trailing actions and breadcrumbs immediately beside the sidebar trigger.
