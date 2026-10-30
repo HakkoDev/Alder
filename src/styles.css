@@ -62,7 +62,6 @@ html[data-density="compact"] .repo-table-row{min-height:50px;}html[data-density=
 
 .repo-workspace-picker select{border:1px solid var(--border);background:var(--card);color:var(--muted-foreground);font-size:11px;height:36px;border-radius:8px;padding:0 8px;max-width:140px;}
 
-/* Alder Phase 2: restrained hierarchy, functional operation panels and informative footer. */
 .sidebar-bottom { min-height:47px;justify-content:flex-start;font-size:10px;color:var(--muted-foreground);letter-spacing:0; }
 .sidebar-bottom span { opacity:.85; }
 .repo-breadcrumb { color:var(--muted-foreground);font-size:12px; }
@@ -116,7 +115,6 @@ html[data-density="compact"] .repo-table-row{min-height:50px;}html[data-density=
 .merge-result-label textarea {font:12px/1.6 var(--font-mono);background:var(--card);color:var(--foreground);border:1px solid var(--border);border-radius:8px;min-height:180px;padding:12px;resize:vertical;width:100%;}
 @media(max-width:800px){.merge-sources {grid-template-columns:1fr;}}
 
-/* Alder 0.2.1: compact workspace switcher, connected change panes and native Radix menus. */
 :root { scrollbar-gutter: stable; }
 .main-body, .sidebar-scroll, .file-scroll, .diff-code, .settings-scroll, .palette-results { scrollbar-gutter: stable; }
 .sidebar-brand {height:70px;min-height:70px;}
@@ -190,9 +188,6 @@ html[data-density="compact"] .repo-table-row{min-height:50px;}html[data-density=
 @media(max-width:900px){.workspace-switcher{width:calc(100% - 18px);margin:0 9px 10px;padding:7px;justify-content:center;}.workspace-switch-label,.workspace-switcher>svg{display:none;}.sidebar-bottom{padding:0 5px;justify-content:center;}.sidebar-bottom span{font-size:0;}.sidebar-bottom span::after{content:"©";font-size:11px;}.repo-nav-entry{display:none;}}
 @media(max-width:650px){.changes-layout{display:flex!important;flex-direction:column;height:auto;}.changes-layout .changes-list{height:390px;flex:none;}.changes-layout .diff-panel{height:400px;flex:none;}.changes-divider{width:100%;height:7px;cursor:row-resize;}.changes-divider::after{display:none;}.footer-bar .footer-action:nth-child(2){display:inline-flex;}}
 
-/* Unified shadcn/Radix components honor Alder semantic theme tokens. */
-[data-radix-popper-content-wrapper]{z-index:100!important;}
-
 /* Portaled shadcn primitives: resolve from Alder runtime theme variables. */
 [data-radix-popper-content-wrapper] { z-index: 120 !important; }
 .alder-portal-menu { background-color: var(--popover); color: var(--popover-foreground, var(--foreground)); border: 1px solid var(--border); box-shadow: 0 18px 45px #0006; border-radius: 9px; opacity: 1; }
@@ -209,7 +204,6 @@ html[data-density="compact"] .repo-table-row{min-height:50px;}html[data-density=
 .alder-portal-menu[data-side],
 .alder-portal-menu { background: var(--popover, #192337); color: var(--popover-foreground, #E8EDF7); border-color: var(--border, #273248); opacity: 1; }
 
-/* Alder feedback/loading surfaces (theme variables match every supported preset). */
 .changes-loading,.repo-loading{display:flex;flex-direction:column;gap:10px;padding:16px;min-height:120px;}
 .animate-pulse{animation:alder-skeleton-pulse 1.5s ease-in-out infinite;}
 @keyframes alder-skeleton-pulse{0%,100%{opacity:.48}50%{opacity:.95}}
@@ -221,7 +215,6 @@ html[data-density="compact"] .repo-table-row{min-height:50px;}html[data-density=
 /* Skip layout/paint on scrolled-out rows while preserving natural scroll size. */
 .file-row,.git-graph-row,.repo-table-row{content-visibility:auto;contain-intrinsic-size:auto 42px;}
 
-/* shadcn Sidebar composition: persistent Ctrl+B collapse, full-height inset, tooltip-friendly icons */
 .sidebar-provider {display:flex;width:100%;height:100%;min-height:0;overflow:hidden;}
 .sidebar-provider > .sidebar {width:var(--sidebar-width);min-width:var(--sidebar-width);transition:width 150ms ease,min-width 150ms ease;flex:none;}
 .sidebar-inset {flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;}
@@ -264,7 +257,6 @@ html[data-density="compact"] .repo-table-row{min-height:50px;}html[data-density=
 /* GitHub provider dashboard */
 .github-panel{min-width:0;padding:0 4px 16px}.github-tabs{display:flex;gap:6px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--border);padding:12px 16px}.github-tabs span{opacity:.65}.github-item{display:flex;width:100%;gap:12px;align-items:center;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--border);color:var(--foreground);padding:13px 17px;cursor:pointer}.github-item:hover{background:var(--accent)}.github-item>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}.github-item strong{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.github-item div span{color:var(--muted-foreground);font-size:11px}.github-empty,.github-connect{padding:30px;color:var(--muted-foreground)}.github-connect{display:grid;gap:12px;justify-items:start}.github-connect h3{color:var(--foreground);margin:0}.github-connect p{margin:0;max-width:630px}.github-connect code{color:var(--foreground)}.github-loading{display:grid;gap:10px;padding:20px}.github-loading>span{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted-foreground)}.github-dialog{width:min(720px,calc(100vw - 44px));max-height:85vh;overflow:auto}.github-dialog label{display:grid;gap:7px;font-size:12px}.github-dialog textarea{width:100%;background:var(--background);color:var(--foreground);border:1px solid var(--border);border-radius:6px;padding:10px;resize:vertical}.github-dialog .github-checkbox{display:flex;align-items:center}.github-detail{display:grid;gap:14px}.github-detail>p{white-space:pre-wrap;max-height:160px;overflow:auto}.github-checks{display:grid;gap:7px;max-height:190px;overflow:auto;font-size:12px}.github-checks strong{display:flex;gap:6px;align-items:center}.github-checks span{display:flex;justify-content:space-between;gap:12px;padding:5px 8px;background:var(--muted);border-radius:4px;overflow-wrap:anywhere}.github-checks small{flex-shrink:0}
 
-/* v0.3.3: unified header tools, compact navigation, polished settings. */
 .topbar {gap:16px;padding-inline:clamp(14px,2vw,26px);}
 .topbar-leading {display:flex;min-width:0;align-items:center;gap:9px;flex:1;}
 .topbar-leading .crumb {min-width:0;gap:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}

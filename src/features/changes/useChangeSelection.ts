@@ -4,7 +4,6 @@ import type { Change } from "../../lib/types";
 export type ChangeSort = "path" | "name" | "status";
 export type ChangeDirection = "asc" | "desc";
 
-/** File sorting and selection are independent of Git mutations and page layout. */
 export function useChangeSelection(listedChanges: Change[]) {
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [changeSort, setChangeSort] = useState<ChangeSort>("path");

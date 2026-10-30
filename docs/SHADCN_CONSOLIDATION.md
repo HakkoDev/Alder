@@ -9,7 +9,7 @@ Alder retains the Morrow/Alder semantic CSS variables and all preset themes. The
 - `src/components/ui/select.tsx`: Radix-backed shadcn Select, Trigger, Value, Content, Item, Group, Label, Separator, and a project-specific `SelectField` convenience composition
 - `src/components/ui/input.tsx`, `scroll-area.tsx`, `separator.tsx`, `tooltip.tsx`: existing Radix/shadcn-style components
 
-The extra `git-menu.tsx` implementation was removed. CommitGraph uses shared ContextMenu directly. App and AdvancedGit use shared Dialog; settings and advanced-Git select fields use shared SelectField. No second menu styling implementation should be reintroduced. These are checked-in, shadcn-compatible source components, not a claim that `shadcn add` ran in this environment.
+The unused `git-menu.tsx` facade and alternate `CommitGraph` implementation are removed; history uses `GitGraph`. App and AdvancedGit use shared Dialog; settings and advanced-Git select fields use shared SelectField. No second menu styling implementation should be reintroduced. These are checked-in, shadcn-compatible source components, not a claim that `shadcn add` ran in this environment.
 
 ## Verification / release blockers
 
