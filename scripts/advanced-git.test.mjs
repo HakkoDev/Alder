@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { test } from "node:test";
 import { rustSource } from "./rust-source.mjs";
 
@@ -34,7 +34,14 @@ test("Git worktree add/list/remove supports paths with spaces and refuses dirty 
         const dir = join(base, "feature worktree");
         git(repo, "worktree", "add", "-b", "feature/new", "--", dir, "HEAD");
         const listing = git(repo, "worktree", "list", "--porcelain", "-z");
-        assert.ok(listing.includes(`worktree ${dir.replaceAll("\\", "/")}`));
+        const worktreePaths = listing
+            .split("\0")
+            .filter((field) => field.startsWith("worktree "))
+            .map((field) => field.slice(9));
+        assert.ok(
+            worktreePaths.some((location) => relative(realpathSync(location), realpathSync(dir)) === ""),
+            listing,
+        );
         writeFileSync(join(dir, "file.txt"), "dirty\n");
         const fail = run(repo, "worktree", "remove", "--", dir);
         assert.notEqual(fail.status, 0, "Git should reject destructive worktree removal");
