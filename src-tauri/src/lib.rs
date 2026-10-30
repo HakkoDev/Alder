@@ -33,9 +33,11 @@ struct Branch { name: String, current: bool, remote: bool }
 
 mod git;
 mod repository;
+mod github;
 
 use git::*;
 use repository::*;
+use github::*;
 
 pub fn run(){
     tauri::Builder::default()
@@ -94,6 +96,19 @@ pub fn run(){
             git::advanced::conflicts::conflict_versions,
             git::advanced::conflicts::save_conflict_resolution,
             git::advanced::worktrees::set_worktree_lock,
+            github::github_auth,
+            github::github_repository,
+            github::github_pull_requests,
+            github::github_issues,
+            github::github_pr_detail,
+            github::github_pr_create,
+            github::github_pr_review,
+            github::github_pr_checks,
+            github::github_pr_checkout_worktree,
+            github::github_notifications,
+            github::github_releases,
+            github::github_tags,
+            github::github_rate_limit,
         ])
         .run(tauri::generate_context!())
         .expect("Could not start Alder");
