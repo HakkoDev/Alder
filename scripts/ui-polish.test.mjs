@@ -14,7 +14,6 @@ test("command search is in header, adjacent to settings and not the sidebar", ()
     assert.match(header, /setPalette\(true\)/);
 });
 test("theme picker is last preferences section", () => {
-    const app = file("src/App.tsx");
     const settings = file("src/components/app/Settings.tsx");
     assert.ok(settings.indexOf("<h3>Display</h3>") < settings.indexOf("<h3>Color theme</h3>"));
     assert.ok(settings.indexOf("settings.language") < settings.indexOf("<h3>Color theme</h3>"));

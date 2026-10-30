@@ -53,7 +53,7 @@ function read(): Preferences {
 let current = read();
 const subs = new Set<() => void>();
 function notify() {
-    subs.forEach((s) => s());
+    for (const subscriber of subs) subscriber();
 }
 export function getPreferences() {
     return current;

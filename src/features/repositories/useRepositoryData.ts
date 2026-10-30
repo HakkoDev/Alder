@@ -105,6 +105,7 @@ export function useRepositoryData({ activeRepoPath, activeFile, stagedDiff, repo
         };
     }, [activeRepoPath, loadSelected]);
 
+    // biome-ignore lint/correctness/useExhaustiveDependencies: A status refresh invalidates the diff after index and worktree mutations.
     useEffect(() => {
         const epoch = ++diffEpoch.current;
         if (!activeRepoPath || !activeFile) {

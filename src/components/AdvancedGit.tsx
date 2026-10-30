@@ -32,12 +32,14 @@ function useConfirmation() {
                 </Dialog.DialogDescription>
                 <div className="modal-footer">
                     <button
+                        type="button"
                         className="p-button secondary"
                         onClick={() => setPending(null)}
                     >
                         Cancel
                     </button>
                     <button
+                        type="button"
                         className="p-button danger"
                         onClick={() => {
                             const action = pending?.action;
@@ -407,9 +409,10 @@ export function OperationsPanel({
                 <h3>Merge or rebase</h3>
                 <p>Both require a clean working tree. Review the source branch before starting; Git may require conflict resolution.</p>
                 <div className="advanced-form">
-                    <label>
+                    <label htmlFor="operation-source-branch">
                         Source branch
                         <Select
+                            id="operation-source-branch"
                             label="Source branch"
                             value={source || "none"}
                             onValueChange={(v) => setSource(v === "none" ? "" : v)}
@@ -586,10 +589,10 @@ export function OperationsPanel({
                 <h3>Recent reflog</h3>
                 <p>Find previous branch positions after checkout, rebase, or reset. Alder does not automatically restore lost working-tree changes.</p>
                 <div className="reflog-list">
-                    {reflog.slice(0, 35).map((entry, i) => (
+                    {reflog.slice(0, 35).map((entry) => (
                         <div
                             className="reflog-row"
-                            key={`${entry.selector}-${i}`}
+                            key={entry.selector}
                         >
                             <GitCommitHorizontal size={14} />
                             <code>{entry.hash}</code>
@@ -638,12 +641,14 @@ export function OperationsPanel({
                     </label>
                     <div className="modal-footer">
                         <button
+                            type="button"
                             className="p-button secondary"
                             onClick={() => setRecovery(null)}
                         >
                             Cancel
                         </button>
                         <button
+                            type="button"
                             className="p-button primary"
                             disabled={!recovery?.name.trim()}
                             onClick={() => {

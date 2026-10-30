@@ -77,6 +77,7 @@ export function Settings({ preferences: p }: { preferences: Preferences }) {
                 <div className="theme-grid">
                     {themeIds.map((id) => (
                         <button
+                            type="button"
                             key={id}
                             className={`theme-choice ${p.themeId === id ? "chosen" : ""}`}
                             onClick={() => updatePreferences({ themeId: id as ThemeId })}

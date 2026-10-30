@@ -5,6 +5,7 @@ export function FooterAction({ title, onClick, children }: { title: string; onCl
         <Tooltip>
             <TooltipTrigger asChild>
                 <button
+                    type="button"
                     className="footer-action"
                     aria-label={title}
                     onClick={onClick}

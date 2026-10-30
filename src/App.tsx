@@ -1,24 +1,16 @@
 import { isTauri } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import {
-    Activity,
     ArrowDownLeft,
     ArrowRight,
     ArrowUpRight,
-    Bell,
-    Blocks,
     Bot,
     Check,
-    CheckCheck,
     ChevronDown,
     ChevronRight,
-    CircleAlert,
-    CircleCheck,
     CircleDot,
-    Clock3,
     CloudDownload,
     CloudUpload,
-    Code2,
     Command,
     FileCode2,
     FilePlus2,
@@ -29,13 +21,11 @@ import {
     GitBranch,
     GitCommitHorizontal,
     GitCompareArrows,
-    GitFork,
     GitMerge,
     GitPullRequest,
     History,
     Layers3,
     LayoutDashboard,
-    LoaderCircle,
     MoreHorizontal,
     Plus,
     RefreshCw,
@@ -43,12 +33,11 @@ import {
     Settings2,
     ShieldCheck,
     SlidersHorizontal,
-    Sparkles,
     Terminal,
     Trash2,
     X,
 } from "lucide-react";
-import { isValidElement, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { OperationsPanel, SequenceRecovery, WorktreePanel } from "./components/AdvancedGit";
 import { AppIcon, Empty, getError, IconButton, PButton } from "./components/app/controls";
@@ -80,9 +69,8 @@ import { useChangeSelection } from "./features/changes/useChangeSelection";
 import { useRepositoryData } from "./features/repositories/useRepositoryData";
 import { git } from "./lib/git-api";
 import { t, useTranslation } from "./lib/i18n";
-import { type Preferences, updatePreferences, usePreferences } from "./lib/preferences";
-import { type ThemeId, themeIds, themePresets } from "./lib/theme-presets";
-import type { Branch, Change, Commit, GitOperationState, ReflogInfo, RepoStatus, Repository, StashInfo, View, Workspace, WorktreeInfo } from "./lib/types";
+import { usePreferences } from "./lib/preferences";
+import type { Change, Repository, View, Workspace } from "./lib/types";
 
 type Modal = "add" | "scan" | "clone" | "init" | "workspace" | "branch" | null;
 const NATIVE = isTauri();
@@ -210,11 +198,6 @@ export default function App() {
         setLoadingHistory,
         loadSelected,
     } = useRepositoryData({ activeRepoPath: activeRepo?.path ?? null, activeFile, stagedDiff, report });
-    useEffect(() => {
-        setGithubCounts({ prs: null, issues: null });
-        setSelectedFiles([]);
-        setSelectionAnchor(null);
-    }, [activeRepo?.path]);
     const selectRepo = (r: Repository) => {
         setActiveRepoId(r.id);
         setView("changes");
@@ -324,6 +307,12 @@ export default function App() {
         setChangeDirection,
         selectChange,
     } = useChangeSelection(status?.changes ?? []);
+    // biome-ignore lint/correctness/useExhaustiveDependencies: Repository identity intentionally resets local selections.
+    useEffect(() => {
+        setGithubCounts({ prs: null, issues: null });
+        setSelectedFiles([]);
+        setSelectionAnchor(null);
+    }, [activeRepo?.path, setSelectedFiles, setSelectionAnchor]);
     const chooseFile = (item: Change, selectedStaged: boolean) => {
         setActiveFile(item.path);
         setStagedDiff(selectedStaged);
@@ -468,6 +457,7 @@ export default function App() {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <button
+                                    type="button"
                                     className="workspace-switcher"
                                     aria-label="Switch workspace"
                                 >
@@ -534,6 +524,7 @@ export default function App() {
                                 <Tooltip key={item.id}>
                                     <TooltipTrigger asChild>
                                         <button
+                                            type="button"
                                             className={`nav-item ${view === item.id ? "active" : ""}`}
                                             onClick={() => setView(item.id)}
                                         >
@@ -568,6 +559,7 @@ export default function App() {
                                     <div className={`repo-nav-entry ${activeRepoId === repo.id ? "selected" : ""}`}>
                                         <ContextMenuTrigger asChild>
                                             <button
+                                                type="button"
                                                 className={`repo-nav-item ${activeRepoId === repo.id ? "selected" : ""}`}
                                                 onClick={() => selectRepo(repo)}
                                                 title={repo.path}
@@ -580,6 +572,7 @@ export default function App() {
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <button
+                                                    type="button"
                                                     className="repo-more"
                                                     aria-label={`Actions for ${repo.name}`}
                                                 >
@@ -630,6 +623,7 @@ export default function App() {
                         </div>
                         <div className="topbar-actions">
                             <button
+                                type="button"
                                 title="Search repositories and commands (Ctrl+K)"
                                 aria-label="Search"
                                 className="quick-search topbar-command-search"
@@ -733,6 +727,7 @@ export default function App() {
                                 </div>
                                 {boot ? (
                                     <div
+                                        role="status"
                                         className="repo-loading"
                                         aria-label="Loading repositories"
                                     >
@@ -773,6 +768,7 @@ export default function App() {
                                             <ContextMenu key={r.id}>
                                                 <ContextMenuTrigger asChild>
                                                     <button
+                                                        type="button"
                                                         className="repo-table-row"
                                                         onClick={() => selectRepo(r)}
                                                     >
@@ -863,6 +859,7 @@ export default function App() {
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
                                                         <button
+                                                            type="button"
                                                             className="split-chevron"
                                                             title="Git synchronization options"
                                                             aria-label="Git synchronization options"
@@ -980,6 +977,7 @@ export default function App() {
                                                         <DropdownMenu>
                                                             <DropdownMenuTrigger asChild>
                                                                 <button
+                                                                    type="button"
                                                                     className="icon-button"
                                                                     title={t("changes.sort")}
                                                                     aria-label={t("changes.sort")}
@@ -1021,19 +1019,24 @@ export default function App() {
                                                 </div>
                                                 <div className="selection-toolbar">
                                                     <button
+                                                        type="button"
                                                         disabled={!selectedUnstaged.length || !!busy}
                                                         onClick={() => void bulkFiles(true, selectedUnstaged)}
                                                     >
                                                         <Plus size={14} /> Stage selected ({selectedUnstaged.length})
                                                     </button>
                                                     <button
+                                                        type="button"
                                                         disabled={!selectedStaged.length || !!busy}
                                                         onClick={() => void bulkFiles(false, selectedStaged)}
                                                     >
                                                         <X size={14} /> Unstage selected ({selectedStaged.length})
                                                     </button>
                                                     {selectedFiles.length > 0 ? (
-                                                        <button onClick={() => setSelectedFiles([])}>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setSelectedFiles([])}
+                                                        >
                                                             <Check size={13} /> Clear
                                                         </button>
                                                     ) : null}
@@ -1041,11 +1044,12 @@ export default function App() {
                                                 <div className="file-scroll">
                                                     {loadingRepo ? (
                                                         <div
+                                                            role="status"
                                                             className="changes-loading"
                                                             aria-label="Loading working tree"
                                                         >
                                                             <Skeleton className="h-6" />
-                                                            {Array.from({ length: 7 }, (_, i) => (
+                                                            {[1, 2, 3, 4, 5, 6, 7].map((i) => (
                                                                 <Skeleton
                                                                     key={i}
                                                                     className="h-9"
@@ -1074,6 +1078,7 @@ export default function App() {
                                                                     Unstaged <b>{unstaged.length}</b>
                                                                 </label>
                                                                 <button
+                                                                    type="button"
                                                                     onClick={() => void perform("Stage all", () => git.stageAll(activeRepo.path))}
                                                                     disabled={!unstaged.length || !!busy}
                                                                 >
@@ -1170,6 +1175,7 @@ export default function App() {
                                                         <DropdownMenu>
                                                             <DropdownMenuTrigger asChild>
                                                                 <button
+                                                                    type="button"
                                                                     className="split-chevron"
                                                                     title="More commit options"
                                                                     aria-label="More commit options"
@@ -1243,6 +1249,7 @@ export default function App() {
                                                     </div>
                                                 </div>
                                             </div>
+                                            {/* biome-ignore lint/a11y/useSemanticElements: This focusable separator is an adjustable pane splitter, not a static horizontal rule. */}
                                             <div
                                                 className="changes-divider"
                                                 role="separator"
@@ -1273,11 +1280,12 @@ export default function App() {
                                                     <div className="diff-code">
                                                         {loadingDiff ? (
                                                             <div
+                                                                role="status"
                                                                 className="changes-loading"
                                                                 aria-label="Loading diff"
                                                             >
                                                                 <Skeleton className="h-5" />
-                                                                {Array.from({ length: 12 }, (_, i) => (
+                                                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => (
                                                                     <Skeleton
                                                                         key={i}
                                                                         className="h-4"
@@ -1326,7 +1334,7 @@ export default function App() {
                                             {loadingHistory ? (
                                                 <div className="changes-loading">
                                                     <Skeleton className="h-8" />
-                                                    {Array.from({ length: 7 }, (_, i) => (
+                                                    {[1, 2, 3, 4, 5, 6, 7].map((i) => (
                                                         <Skeleton
                                                             key={i}
                                                             className="h-9"
@@ -1471,6 +1479,7 @@ export default function App() {
                             ))}
                     </div>
                     <div
+                        role="status"
                         className="footer-bar"
                         aria-label="Repository status"
                     >
@@ -1810,6 +1819,7 @@ export default function App() {
                                 .filter((a) => a.name.toLowerCase().includes(paletteQuery.toLowerCase()))
                                 .map((a) => (
                                     <button
+                                        type="button"
                                         key={a.name}
                                         onClick={() => {
                                             setPalette(false);
@@ -1828,6 +1838,7 @@ export default function App() {
                                 .slice(0, 12)
                                 .map((r) => (
                                     <button
+                                        type="button"
                                         key={r.id}
                                         onClick={() => {
                                             setPalette(false);

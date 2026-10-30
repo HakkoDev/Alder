@@ -38,6 +38,7 @@ export function FileRow({
                             onChange={() => {}}
                         />
                         <button
+                            type="button"
                             title={change.path}
                             onClick={onClick}
                             className="file-select"

@@ -11,15 +11,22 @@ export function DiffText({
     disabled: boolean;
     onSelect: (hunk: number, line: number | null) => void;
 }) {
-    const lines = useMemo(() => text.split("\n").slice(0, 3000), [text]);
+    const lines = useMemo(
+        () =>
+            text
+                .split("\n")
+                .slice(0, 3000)
+                .map((line, offset) => ({ line, offset })),
+        [text],
+    );
     let hunk = -1;
     let hunkLine = 0;
     return (
-        <div
+        <section
             className="diff-lines"
             aria-label="File diff with partial staging controls"
         >
-            {lines.map((line, i) => {
+            {lines.map(({ line, offset: i }) => {
                 if (line.startsWith("@@ ")) {
                     hunk++;
                     hunkLine = 0;
@@ -36,6 +43,7 @@ export function DiffText({
                         <span className="line-no">
                             {heading && hunk >= 0 ? (
                                 <button
+                                    type="button"
                                     disabled={disabled}
                                     className="diff-stage-control"
                                     title={staged ? t("changes.unstageHunk") : t("changes.stageHunk")}
@@ -46,6 +54,7 @@ export function DiffText({
                                 </button>
                             ) : change ? (
                                 <button
+                                    type="button"
                                     disabled={disabled}
                                     className="diff-stage-control"
                                     title={staged ? "Unstage this line" : "Stage this line"}
@@ -63,6 +72,6 @@ export function DiffText({
                 );
             })}
             {text.split("\n").length > 3000 ? <div className="truncated">Only the first 3,000 diff lines are shown.</div> : null}
-        </div>
+        </section>
     );
 }

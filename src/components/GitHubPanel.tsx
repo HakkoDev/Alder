@@ -168,6 +168,7 @@ export function GitHubPanel({ path, onCounts }: { path: string; onCounts?: (prs:
             </div>
             {loading ? (
                 <div
+                    role="status"
                     className="github-loading"
                     aria-label="Loading GitHub data"
                 >
@@ -244,6 +245,7 @@ export function GitHubPanel({ path, onCounts }: { path: string; onCounts?: (prs:
                         prs.length ? (
                             prs.map((pr) => (
                                 <button
+                                    type="button"
                                     key={pr.number}
                                     className="github-item"
                                     onClick={() => setSelected(pr.number)}
@@ -264,6 +266,7 @@ export function GitHubPanel({ path, onCounts }: { path: string; onCounts?: (prs:
                     ) : issues.length ? (
                         issues.map((issue) => (
                             <button
+                                type="button"
                                 key={issue.number}
                                 className="github-item"
                                 onClick={() => external(issue.url)}
@@ -293,17 +296,19 @@ export function GitHubPanel({ path, onCounts }: { path: string; onCounts?: (prs:
                         <Dialog.DialogTitle>Create pull request</Dialog.DialogTitle>
                         <Dialog.DialogDescription>Publish your current branch to GitHub before creating its PR.</Dialog.DialogDescription>
                     </Dialog.DialogHeader>
-                    <label>
+                    <label htmlFor="github-pr-title">
                         Title
                         <Input
+                            id="github-pr-title"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder="Describe your changes"
                         />
                     </label>
-                    <label>
+                    <label htmlFor="github-pr-base">
                         Base branch
                         <Input
+                            id="github-pr-base"
                             value={base}
                             onChange={(e) => setBase(e.target.value)}
                         />
@@ -361,8 +366,8 @@ export function GitHubPanel({ path, onCounts }: { path: string; onCounts?: (prs:
                                     <ShieldCheck size={15} /> Checks
                                 </strong>
                                 {detail.statusCheckRollup?.length ? (
-                                    detail.statusCheckRollup.map((c, i) => (
-                                        <span key={i}>
+                                    detail.statusCheckRollup.map((c) => (
+                                        <span key={JSON.stringify(c)}>
                                             {c.name ?? "Check"}: {c.conclusion || c.state || c.status || "Pending"}
                                         </span>
                                     ))
@@ -389,9 +394,10 @@ export function GitHubPanel({ path, onCounts }: { path: string; onCounts?: (prs:
                             >
                                 View full diff on GitHub <ArrowUpRight size={14} />
                             </Button>
-                            <label>
+                            <label htmlFor="github-pr-worktree">
                                 Checkout into new worktree
                                 <Input
+                                    id="github-pr-worktree"
                                     value={checkoutLocation}
                                     onChange={(e) => setCheckoutLocation(e.target.value)}
                                     placeholder="Absolute path to a new directory"

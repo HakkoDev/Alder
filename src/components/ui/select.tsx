@@ -74,12 +74,14 @@ export function SelectField({
     options,
     label,
     className,
+    id,
 }: {
     value: string;
     onValueChange: (value: string) => void;
     options: { value: string; label: string }[];
     label: string;
     className?: string;
+    id?: string;
 }) {
     return (
         <Select
@@ -87,6 +89,7 @@ export function SelectField({
             onValueChange={onValueChange}
         >
             <SelectTrigger
+                id={id}
                 aria-label={label}
                 className={className}
             >

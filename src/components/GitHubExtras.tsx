@@ -87,7 +87,10 @@ export function GitHubExtras({ path }: { path: string }) {
                 ))}
             </div>
             {loading ? (
-                <div aria-label="Loading GitHub activity">
+                <div
+                    role="status"
+                    aria-label="Loading GitHub activity"
+                >
                     {[0, 1, 2].map((n) => (
                         <Skeleton
                             key={n}
@@ -115,7 +118,7 @@ export function GitHubExtras({ path }: { path: string }) {
             ) : entries.length === 0 ? (
                 <p className="github-empty">No {section} to display.</p>
             ) : (
-                entries.map((entry, i) => {
+                entries.map((entry) => {
                     if (section === "notifications") {
                         const item = entry as GitHubNotification;
                         return (
@@ -136,6 +139,7 @@ export function GitHubExtras({ path }: { path: string }) {
                         const item = entry as GitHubRelease;
                         return (
                             <button
+                                type="button"
                                 className="github-item"
                                 key={item.id}
                                 onClick={() => githubLink(item.html_url)}
@@ -156,7 +160,7 @@ export function GitHubExtras({ path }: { path: string }) {
                     return (
                         <div
                             className="github-item"
-                            key={item.name + i}
+                            key={item.name}
                         >
                             <div>
                                 <strong>{item.name}</strong>

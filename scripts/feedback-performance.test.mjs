@@ -13,8 +13,8 @@ test("Sonner is mounted once at the application root in bottom-right", () => {
     assert.match(app, /toast\.error/);
 });
 test("changes and diff have loading skeletons and status is independent of other panels", () => {
-    assert.match(app, /loadingRepo\s*\?\s*\(\s*<div\s+className="changes-loading"/);
-    assert.match(app, /loadingDiff\s*\?\s*\(\s*<div\s+className="changes-loading"/);
+    assert.match(app, /loadingRepo\s*\?\s*\(\s*<div\s+[^>]*className="changes-loading"/);
+    assert.match(app, /loadingDiff\s*\?\s*\(\s*<div\s+[^>]*className="changes-loading"/);
     assert.match(repositoryData, /const primary\s*=\s*await git\.status\(path\)/);
     assert.match(repositoryData, /setStatus\(primary\)/);
     assert.match(repositoryData, /Promise\.allSettled/);

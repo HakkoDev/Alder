@@ -76,9 +76,9 @@ export function GitGraph({ commits }: { commits: Commit[] }) {
                                         opacity=".75"
                                     />
                                 ))}
-                            {row.outgoing.map((edge, j) => (
+                            {row.outgoing.map((edge) => (
                                 <path
-                                    key={j}
+                                    key={`${edge.from}:${edge.to}`}
                                     d={`M${cx(edge.from)},20 C${cx(edge.from)},31 ${cx(edge.to)},27 ${cx(edge.to)},40`}
                                     stroke={COLORS[edge.from % COLORS.length]}
                                     strokeWidth="2"

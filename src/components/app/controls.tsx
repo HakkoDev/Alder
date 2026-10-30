@@ -28,6 +28,7 @@ export function IconButton({
         <Tooltip>
             <TooltipTrigger asChild>
                 <button
+                    type="button"
                     title={title}
                     aria-label={title}
                     className={`icon-button ${className}`}
@@ -64,6 +65,7 @@ export function PButton({
 }) {
     const button = (
         <button
+            type="button"
             title={title}
             className={`p-button ${variant}`}
             onClick={onClick}
