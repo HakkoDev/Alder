@@ -21,7 +21,7 @@ test("GitHub CLI documentation is reachable from both authenticated and setup st
     const panel = file("src/components/GitHubPanel.tsx");
     assert.equal(panel.match(/https:\/\/cli\.github\.com\/manual\//g)?.length, 2);
 });
-test("Morrow rust formatting and lint commands are available", () => {
+test("Rust formatting and lint commands are available", () => {
     const scripts = JSON.parse(file("package.json")).scripts;
     assert.match(scripts["format:rust"], /cargo fmt .* --all/);
     assert.match(scripts["format:rust:check"], /cargo fmt .* --all -- --check/);

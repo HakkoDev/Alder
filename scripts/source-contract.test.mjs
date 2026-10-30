@@ -33,7 +33,7 @@ test("desktop commands are wired and Git is invoked as argv, not shell interpola
     assert.doesNotMatch(rust, /\.shell\s*\(/);
     assert.match(rust, /"pull",\s*"--ff-only"/);
 });
-test("theme preset engine and Morrow conventions are preserved", () => {
+test("theme preset engine and semantic tokens are preserved", () => {
     const t = read("src/lib/theme-presets.ts");
     assert.match(t, /export const themePresets/);
     assert.match(read("src/lib/preferences.ts"), /themeId: "alder"/);

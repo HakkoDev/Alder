@@ -62,7 +62,7 @@ export interface ThemePalette {
     sidebarRing: string;
     charts: readonly [string, string, string, string, string];
 
-    // Additional Morrow surface aliases derived from the canonical semantic palette.
+    // Surface aliases derived from the canonical semantic palette.
     panel: string;
     surface: string;
     surfaceHover: string;
@@ -2038,7 +2038,7 @@ const styledTweakcnPresets = Object.fromEntries(
     Object.entries(tweakcnPresets).map(([id, theme]) => [id, withThemeStyle(theme, tweakcnStyleMetadata[id as keyof typeof tweakcnPresets])]),
 ) as Record<keyof typeof tweakcnPresets, ThemePreset>;
 
-// Alder-only palette: color overrides, preserving all Morrow typography, spacing,
+// Alder palette: color overrides that retain typography, spacing,
 // radius and other non-color theme settings. The original presets remain available.
 const alderPalette = preset(
     "Alder",
