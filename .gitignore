@@ -16,3 +16,4 @@ src-tauri/tauri.release.conf.json
 *.pem
 *.p12
 *.key
+*.key.pub
