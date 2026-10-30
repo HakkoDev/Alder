@@ -39,8 +39,8 @@ test("Git worktree add/list/remove supports paths with spaces and refuses dirty 
             .filter((field) => field.startsWith("worktree "))
             .map((field) => field.slice(9));
         assert.ok(
-            worktreePaths.some((location) => relative(realpathSync(location), realpathSync(dir)) === ""),
-            listing,
+            worktreePaths.some((location) => relative(realpathSync.native(location), realpathSync.native(dir)) === ""),
+            `Expected worktree ${realpathSync.native(dir)} in ${listing}`,
         );
         writeFileSync(join(dir, "file.txt"), "dirty\n");
         const fail = run(repo, "worktree", "remove", "--", dir);
