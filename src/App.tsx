@@ -1537,7 +1537,7 @@ export default function App() {
                                 <FolderGit2 size={13} /> {repos.length} repositories · {changed} with changes
                             </FooterAction>
                         )}
-                        <span className="footer-version">Alder v0.2.1</span>
+                        <span className="footer-version">Alder v0.3.5</span>
                     </div>
                 </SidebarInset>
                 <Dialog.Dialog
