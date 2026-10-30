@@ -69,7 +69,7 @@ export function AppFooter(props: Props) {
                     <FolderGit2 size={13} /> {repos.length} repositories · {changed} with changes
                 </FooterAction>
             )}
-            <span className="footer-version">Alder v0.3.6</span>
+            <span className="footer-version">Alder v0.3.7</span>
         </div>
     );
 }
