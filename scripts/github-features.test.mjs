@@ -1,0 +1,20 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
+test("GitHub worktree checkout and paginated API commands registered", () => {
+    const rust = read("src-tauri/src/github/mod.rs");
+    const lib = read("src-tauri/src/lib.rs");
+    for (const c of ["github_pr_checkout_worktree", "github_notifications", "github_releases", "github_tags", "github_rate_limit"]) {
+        assert.ok(rust.includes(`fn ${c}(`));
+        assert.ok(lib.includes(`github::${c}`));
+    }
+});
+test("React components are split and Morrow does not appear in user-facing UI", () => {
+    const app = read("src/App.tsx");
+    const settings = read("src/components/app/Settings.tsx");
+    assert.ok(app.includes("./components/app/Settings"));
+    assert.ok(read("src/components/GitHubPanel.tsx").includes("GitHubExtras"));
+    assert.doesNotMatch(app, /Morrow/i);
+    assert.doesNotMatch(settings, /Morrow/i);
+});
