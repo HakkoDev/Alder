@@ -13,6 +13,7 @@
             "!!**/dist",
             "!!**/target",
             "!!src-tauri/gen",
+            "!!src-tauri/tauri.release.conf.json",
             "!!data",
             "!!.local-certs",
             "!!.git"

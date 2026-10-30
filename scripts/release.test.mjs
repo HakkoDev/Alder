@@ -85,7 +85,7 @@ test("release notes classify actual Conventional Commits and compare stable vers
     const notes = renderNotes(version, [{ subject: "feat(git): add staging" }, { subject: "feat(git): add staging" }], "v0.1.0");
     assert.equal(notes.match(/add staging/g)?.length, 1);
     assert.ok(notes.includes(`Alder v${version}`));
-    assert.doesNotMatch(notes, /Morrow|email client/);
+    assert.ok(notes.includes("local-first Git desktop client"));
 });
 
 test("native lockfile contains Alder dependencies and exact Tauri pins", () => {
@@ -102,7 +102,7 @@ test("ported workflows have Alder names and executable package scripts", () => {
     const pkg = JSON.parse(read("package.json"));
     for (const path of ["build-windows.yml", "refresh-lockfile.yml", "release.yml"]) {
         const workflow = read(`.github/workflows/${path}`);
-        assert.doesNotMatch(workflow, /morrow/i);
+        assert.match(workflow, /alder-/);
         for (const [, name] of workflow.matchAll(/bun run ([\w:-]+)/g)) {
             assert.ok(pkg.scripts[name], `Missing script ${name} in ${path}`);
         }
@@ -111,6 +111,9 @@ test("ported workflows have Alder names and executable package scripts", () => {
         }
     }
     assert.match(read(".github/workflows/release.yml"), /--draft/);
+    const release = read(".github/workflows/release.yml");
+    assert.match(release, /tauri signer sign/);
+    assert.ok(release.indexOf("tauri signer sign") < release.indexOf("Create draft release"));
     assert.doesNotMatch(read(".github/workflows/release.yml"), /gh release edit.*--draft=false/);
     assert.match(read(".github/dependabot.yml"), /directory: "\/src-tauri"/);
 });
