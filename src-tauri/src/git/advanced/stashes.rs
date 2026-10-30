@@ -1,4 +1,3 @@
-//! stashes operations.
 use crate::*;
 
 #[tauri::command]

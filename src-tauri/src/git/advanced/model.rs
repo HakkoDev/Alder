@@ -1,4 +1,3 @@
-//! model operations.
 use crate::*;
 
 #[derive(Serialize)]

@@ -1,5 +1,6 @@
-//! repository - commands.rs operations.
 use crate::*;
+
+type RepositoryEntry = (String, String, Option<String>);
 
 #[tauri::command]
 pub(crate) fn git_version() -> Result<String,String> {
@@ -15,13 +16,13 @@ pub(crate) fn list_repositories(state: State<'_,AppState>) -> Result<Vec<Reposit
     // Keep database access on this thread, then bound Git subprocess concurrency
     // to four worker threads. Scanning 100 repositories sequentially can freeze
     // the dashboard for seconds; unbounded subprocesses are equally undesirable.
-    let entries: Vec<(String,String,Option<String>)> = rows.collect::<Result<_,_>>().map_err(err)?;
+    let entries: Vec<RepositoryEntry> = rows.collect::<Result<_,_>>().map_err(err)?;
     drop(statement);
     drop(db);
-    let workers = entries.len().min(4).max(1);
+    let workers = entries.len().clamp(1,4);
     let mut ordered: Vec<(usize,Repository)> = std::thread::scope(|scope| {
         let mut handles = Vec::new();
-        let mut chunks: Vec<Vec<(usize,(String,String,Option<String>))>> = (0..workers).map(|_| Vec::new()).collect();
+        let mut chunks: Vec<Vec<(usize,RepositoryEntry)>> = (0..workers).map(|_| Vec::new()).collect();
         for (i,entry) in entries.into_iter().enumerate() { chunks[i % workers].push((i,entry)); }
         for chunk in chunks {
             handles.push(scope.spawn(move || chunk.into_iter().map(|(i,(id,path,ws))| (i,build_repo(id,path,ws))).collect::<Vec<_>>()));
@@ -58,7 +59,7 @@ pub(crate) fn walk_repos(root:&Path,depth:usize,db:&Connection,count:&mut usize)
 pub(crate) fn discover_repositories(state:State<'_,AppState>,path:String,depth:usize)->Result<usize,String>{
     let root=PathBuf::from(path).canonicalize().map_err(err)?;
     let mut n=0;
-    walk_repos(&root,depth.min(6).max(1),&database(&state.db)?,&mut n)?;
+    walk_repos(&root,depth.clamp(1,6),&database(&state.db)?,&mut n)?;
     Ok(n)
 }
 #[tauri::command]

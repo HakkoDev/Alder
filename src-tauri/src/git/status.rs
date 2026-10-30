@@ -1,4 +1,3 @@
-//! git - status.rs operations.
 use crate::*;
 
 pub(crate) fn branch(path: &Path) -> String { git_run(path, &["symbolic-ref", "--quiet", "--short", "HEAD"]).unwrap_or_else(|_| "(detached)".into()).trim().to_owned() }

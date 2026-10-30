@@ -1,4 +1,3 @@
-//! git - remotes.rs operations.
 use crate::*;
 
 #[tauri::command]
@@ -68,6 +67,3 @@ pub(crate) async fn pull_repo(path:String)->Result<String,String>{git_network(pa
 #[tauri::command]
 pub(crate) async fn push_repo(path:String)->Result<String,String>{git_network(path,"push".into(),None).await}
 
-
-// Phase 2 operations are always executed by the installed Git executable.
-// Existing worktree data is never force-deleted or silently stashed.

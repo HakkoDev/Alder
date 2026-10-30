@@ -1,4 +1,3 @@
-//! conflicts operations.
 use crate::*;
 
 #[derive(Serialize)]
@@ -35,4 +34,3 @@ pub(crate) fn save_conflict_resolution(path:String,file:String,content:String)->
     git_run(&root,&["add","--",&file])?;
     Ok(())
 }
-

@@ -1,4 +1,3 @@
-//! github - mod.rs operations.
 use crate::*;
 
 // GitHub integration deliberately delegates credentials to GitHub CLI (`gh`).
@@ -74,7 +73,6 @@ pub(crate) fn github_pr_checks(path: String, number: u32) -> Result<serde_json::
 }
 
 
-// v0.3.4: keep provider queries read-only except for explicitly confirmed PR checkout.
 fn github_page(page: u32) -> Result<String, String> {
     if !(1..=100).contains(&page) { return Err("Page must be between 1 and 100".into()); }
     Ok(page.to_string())

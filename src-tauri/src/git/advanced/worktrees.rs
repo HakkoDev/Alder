@@ -1,4 +1,3 @@
-//! worktrees operations.
 use crate::*;
 
 #[tauri::command]
@@ -65,5 +64,4 @@ pub(crate) fn set_worktree_lock(path:String,location:String,locked:bool)->Result
     else{git_run(&root,&["worktree","unlock","--",&dest])?;}
     Ok(())
 }
-
 

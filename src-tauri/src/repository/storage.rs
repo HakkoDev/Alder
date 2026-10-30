@@ -1,4 +1,3 @@
-//! repository - storage.rs operations.
 use crate::*;
 
 pub(crate) fn err<E: std::fmt::Display>(e: E) -> String { e.to_string() }

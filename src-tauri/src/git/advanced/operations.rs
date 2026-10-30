@@ -1,4 +1,3 @@
-//! operations operations.
 use crate::*;
 
 #[tauri::command]

@@ -1,4 +1,3 @@
-//! git - history.rs operations.
 use crate::*;
 
 #[tauri::command]

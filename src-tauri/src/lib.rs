@@ -37,7 +37,6 @@ mod github;
 
 use git::*;
 use repository::*;
-use github::*;
 
 pub fn run(){
     tauri::Builder::default()

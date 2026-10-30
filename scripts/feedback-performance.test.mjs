@@ -25,6 +25,6 @@ test("repository load epochs avoid stale status and diff updates", () => {
     assert.match(repositoryData, /if\s*\(!valid\(\)\)\s*return/);
 });
 test("dashboard Git status checks are bounded instead of launching unlimited subprocesses", () => {
-    assert.match(rust, /entries\.len\(\)\.min\(4\)/);
+    assert.match(rust, /entries\.len\(\)\.clamp\(1,\s*4\)/);
     assert.match(rust, /std::thread::scope/);
 });

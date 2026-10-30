@@ -1,4 +1,3 @@
-//! git - core.rs operations.
 use crate::*;
 
 pub(crate) fn git_raw(args: &[&str]) -> Result<Output, String> {

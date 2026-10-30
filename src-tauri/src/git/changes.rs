@@ -1,4 +1,3 @@
-//! git - changes.rs operations.
 use crate::*;
 
 #[tauri::command]
@@ -39,7 +38,7 @@ pub(crate) fn apply_diff_selection(path:String,file:String,staged:bool,hunk:usiz
     }
     if groups.is_empty() {return Err("No editable patch hunks for this file".into());}
     let group=groups.get(hunk).ok_or("Diff hunk no longer exists; refresh and try again")?;
-    if group.first().map(|v|v.contains("@@")).unwrap_or(false)==false{return Err("Invalid hunk".into());}
+    if !group.first().map(|v|v.contains("@@")).unwrap_or(false){return Err("Invalid hunk".into());}
     let selected:Vec<String>=if let Some(selected_line)=line {
         if selected_line==0 || selected_line>=group.len() {return Err("Selected diff line is out of range".into());}
         let row=group[selected_line];
@@ -49,7 +48,7 @@ pub(crate) fn apply_diff_selection(path:String,file:String,staged:bool,hunk:usiz
         group.iter().enumerate().skip(1).filter_map(|(i,row)|{
             if row.starts_with("\\ No newline") {return None;}
             if row.starts_with('+') {if i==selected_line {Some((*row).to_string())}else{None}}
-            else if row.starts_with('-') {if i==selected_line {Some((*row).to_string())}else{Some(format!(" {}",&row[1..]))}}
+            else if let Some(content)=row.strip_prefix('-') {if i==selected_line {Some((*row).to_string())}else{Some(format!(" {content}"))}}
             else {Some((*row).to_string())}
         }).collect()
     }else{group.iter().skip(1).map(|s|(*s).to_string()).collect()};

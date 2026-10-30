@@ -1,4 +1,3 @@
-//! recovery operations.
 use crate::*;
 
 #[tauri::command]
@@ -31,5 +30,4 @@ pub(crate) fn create_recovery_branch(path:String,hash:String,name:String)->Resul
     verify_branch_name(&name)?;
     git_run(&root,&["branch","--",&name,&hash]).map(|_|())
 }
-
 
