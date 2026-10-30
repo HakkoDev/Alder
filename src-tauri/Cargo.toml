@@ -1,0 +1,22 @@
+[package]
+name = "alder-git"
+version = "0.3.5"
+description = "Alder, a fast local-first Git client built on Tauri and Rust"
+authors = ["Alder Contributors"]
+license = "GPL-3.0-only"
+edition = "2021"
+
+[lib]
+name = "alder_git_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "=2.7.2", features = [] }
+
+[dependencies]
+tauri = { version = "=2.12.3", features = [] }
+tauri-plugin-dialog = "=2.8.3"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.40", features = ["bundled"] }
+uuid = { version = "1", features = ["v4"] }
