@@ -34,7 +34,7 @@ test("Git worktree add/list/remove supports paths with spaces and refuses dirty 
         const dir = join(base, "feature worktree");
         git(repo, "worktree", "add", "-b", "feature/new", "--", dir, "HEAD");
         const listing = git(repo, "worktree", "list", "--porcelain", "-z");
-        assert.ok(listing.includes(`worktree ${dir}`));
+        assert.ok(listing.includes(`worktree ${dir.replaceAll("\\", "/")}`));
         writeFileSync(join(dir, "file.txt"), "dirty\n");
         const fail = run(repo, "worktree", "remove", "--", dir);
         assert.notEqual(fail.status, 0, "Git should reject destructive worktree removal");

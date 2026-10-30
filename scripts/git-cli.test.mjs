@@ -20,10 +20,11 @@ function setup() {
 test("unusual whitespace in filenames survives porcelain -z parsing", () => {
     const root = setup();
     try {
-        writeFileSync(join(root, "hello world\twith-tab.txt"), "hello\n");
+        const filename = process.platform === "win32" ? "hello world with spaces.txt" : "hello world\twith-tab.txt";
+        writeFileSync(join(root, filename), "hello\n");
         const out = spawnSync("git", ["-C", root, "status", "--porcelain=v1", "-z", "--untracked-files=all"]);
         assert.equal(out.status, 0);
-        assert.match(out.stdout.toString("utf8"), /hello world\twith-tab.txt/);
+        assert.ok(out.stdout.toString("utf8").includes(filename));
         assert.equal(out.stdout.at(-1), 0);
     } finally {
         rmSync(root, { recursive: true, force: true });
