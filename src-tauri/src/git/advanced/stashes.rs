@@ -1,7 +1,13 @@
 use crate::*;
 
 #[tauri::command]
-pub(crate) fn list_stashes(path: String) -> Result<Vec<StashInfo>, String> {
+pub(crate) async fn list_stashes(path: String) -> Result<Vec<StashInfo>, String> {
+    tauri::async_runtime::spawn_blocking(move || list_stashes_blocking(path))
+        .await
+        .map_err(|error| format!("Git worker failed: {error}"))?
+}
+
+fn list_stashes_blocking(path: String) -> Result<Vec<StashInfo>, String> {
     let root = repo_root(&path)?;
     let output = git_run(&root, &["stash", "list", "--format=%gd%x1f%gs%x1e"])?;
     Ok(output
@@ -19,7 +25,10 @@ pub(crate) fn validate_stash(root: &Path, reference: &str) -> Result<(), String>
     if !reference.starts_with("stash@{") || !reference.ends_with('}') || !reference[7..reference.len() - 1].chars().all(|c| c.is_ascii_digit()) {
         return Err("Invalid stash selector".into());
     }
-    if !list_stashes(root.to_string_lossy().to_string())?.iter().any(|s| s.reference == reference) {
+    if !list_stashes_blocking(root.to_string_lossy().to_string())?
+        .iter()
+        .any(|s| s.reference == reference)
+    {
         return Err("Stash no longer exists".into());
     }
     Ok(())

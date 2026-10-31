@@ -1,7 +1,13 @@
 use crate::*;
 
 #[tauri::command]
-pub(crate) fn list_reflog(path: String) -> Result<Vec<ReflogInfo>, String> {
+pub(crate) async fn list_reflog(path: String) -> Result<Vec<ReflogInfo>, String> {
+    tauri::async_runtime::spawn_blocking(move || list_reflog_blocking(path))
+        .await
+        .map_err(|error| format!("Git worker failed: {error}"))?
+}
+
+fn list_reflog_blocking(path: String) -> Result<Vec<ReflogInfo>, String> {
     let root = repo_root(&path)?;
     let raw = git_run(&root, &["reflog", "--max-count=100", "--format=%h%x1f%gD%x1f%gs%x1e"])?;
     Ok(raw

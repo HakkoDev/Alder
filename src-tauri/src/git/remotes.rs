@@ -63,7 +63,13 @@ pub(crate) fn network_op(path: String, what: &str, remote: Option<String>) -> Re
     }
 }
 #[tauri::command]
-pub(crate) fn list_remotes(path: String) -> Result<Vec<String>, String> {
+pub(crate) async fn list_remotes(path: String) -> Result<Vec<String>, String> {
+    tauri::async_runtime::spawn_blocking(move || list_remotes_blocking(path))
+        .await
+        .map_err(|error| format!("Git worker failed: {error}"))?
+}
+
+fn list_remotes_blocking(path: String) -> Result<Vec<String>, String> {
     let names = git_run(&repo_root(&path)?, &["remote"])?;
     Ok(names.lines().map(str::to_string).collect())
 }

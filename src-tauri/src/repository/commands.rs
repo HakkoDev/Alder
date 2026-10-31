@@ -11,8 +11,15 @@ pub(crate) fn git_version() -> Result<String, String> {
     Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
 }
 #[tauri::command]
-pub(crate) fn list_repositories(state: State<'_, AppState>) -> Result<Vec<Repository>, String> {
-    let db = database(&state.db)?;
+pub(crate) async fn list_repositories(state: State<'_, AppState>) -> Result<Vec<Repository>, String> {
+    let db_path = state.db.clone();
+    tauri::async_runtime::spawn_blocking(move || list_repositories_blocking(&db_path))
+        .await
+        .map_err(|error| format!("Repository scan worker failed: {error}"))?
+}
+
+fn list_repositories_blocking(db_path: &Path) -> Result<Vec<Repository>, String> {
+    let db = database(db_path)?;
     let mut statement = db
         .prepare("SELECT id,path,workspace_id FROM repositories ORDER BY path COLLATE NOCASE")
         .map_err(err)?;

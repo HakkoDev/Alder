@@ -120,13 +120,12 @@ export function RepositoryTools({ path }: { path: string }) {
         setPreviewReady(false);
         setConfirmation(null);
         setPendingOperation(null);
-        void Promise.all([git.diagnostics(path), git.lfsStatus(path), git.submodules(path), git.worktrees(path)])
-            .then(([d, l, s, w]) => {
-                if (!active) return;
-                setReport(d);
-                setLfs(l);
-                setSubmodules(s);
-                setTrees(w);
+        // Diagnostic status may complete quickly even if Git LFS/submodule commands are slow.
+        // Do not hold the whole inspector in a loading state for the slowest command.
+        void git
+            .diagnostics(path)
+            .then((value) => {
+                if (active) setReport(value);
             })
             .catch((error) => {
                 if (active) toast.error(errorText(error));
@@ -134,6 +133,24 @@ export function RepositoryTools({ path }: { path: string }) {
             .finally(() => {
                 if (active) setLoading(false);
             });
+        void git
+            .worktrees(path)
+            .then((value) => {
+                if (active) setTrees(value);
+            })
+            .catch(() => {});
+        void git
+            .lfsStatus(path)
+            .then((value) => {
+                if (active) setLfs(value);
+            })
+            .catch(() => {});
+        void git
+            .submodules(path)
+            .then((value) => {
+                if (active) setSubmodules(value);
+            })
+            .catch(() => {});
         return () => {
             active = false;
         };

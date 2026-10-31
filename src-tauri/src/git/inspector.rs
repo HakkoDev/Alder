@@ -6,7 +6,13 @@ fn optional(root: &Path, args: &[&str]) -> Option<String> {
 }
 
 #[tauri::command]
-pub(crate) fn repository_diagnostics(path: String) -> Result<Value, String> {
+pub(crate) async fn repository_diagnostics(path: String) -> Result<Value, String> {
+    tauri::async_runtime::spawn_blocking(move || repository_diagnostics_blocking(path))
+        .await
+        .map_err(|error| format!("Git worker failed: {error}"))?
+}
+
+fn repository_diagnostics_blocking(path: String) -> Result<Value, String> {
     let root = repo_root(&path)?;
     let branch = optional(&root, &["symbolic-ref", "--quiet", "--short", "HEAD"]);
     let upstream = optional(&root, &["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"]);
@@ -50,7 +56,13 @@ pub(crate) fn repository_diagnostics(path: String) -> Result<Value, String> {
 }
 
 #[tauri::command]
-pub(crate) fn git_lfs_status(path: String) -> Result<Value, String> {
+pub(crate) async fn git_lfs_status(path: String) -> Result<Value, String> {
+    tauri::async_runtime::spawn_blocking(move || git_lfs_status_blocking(path))
+        .await
+        .map_err(|error| format!("Git worker failed: {error}"))?
+}
+
+fn git_lfs_status_blocking(path: String) -> Result<Value, String> {
     let root = repo_root(&path)?;
     let installed = git_run(&root, &["lfs", "version"]).ok();
     let tracked = if installed.is_some() {
@@ -69,7 +81,13 @@ pub(crate) fn git_lfs_status(path: String) -> Result<Value, String> {
 }
 
 #[tauri::command]
-pub(crate) fn git_submodules(path: String) -> Result<Value, String> {
+pub(crate) async fn git_submodules(path: String) -> Result<Value, String> {
+    tauri::async_runtime::spawn_blocking(move || git_submodules_blocking(path))
+        .await
+        .map_err(|error| format!("Git worker failed: {error}"))?
+}
+
+fn git_submodules_blocking(path: String) -> Result<Value, String> {
     let root = repo_root(&path)?;
     let configured = root.join(".gitmodules").is_file();
     let status = if configured {
@@ -111,10 +129,16 @@ pub(crate) fn git_maintenance_action(path: String, action: String) -> Result<Str
 }
 
 #[tauri::command]
-pub(crate) fn git_worktree_comparison(path: String, location: String) -> Result<Value, String> {
+pub(crate) async fn git_worktree_comparison(path: String, location: String) -> Result<Value, String> {
+    tauri::async_runtime::spawn_blocking(move || git_worktree_comparison_blocking(path, location))
+        .await
+        .map_err(|error| format!("Git worker failed: {error}"))?
+}
+
+fn git_worktree_comparison_blocking(path: String, location: String) -> Result<Value, String> {
     let root = repo_root(&path)?;
     let destination = Path::new(&location).canonicalize().map_err(err)?;
-    let known = crate::git::advanced::worktrees::list_worktrees(path)?;
+    let known = crate::git::advanced::worktrees::list_worktrees_blocking(path)?;
     if !known.iter().any(|w| Path::new(&w.path).canonicalize().ok().as_ref() == Some(&destination)) {
         return Err("Not a registered worktree".into());
     }
@@ -126,7 +150,13 @@ pub(crate) fn git_worktree_comparison(path: String, location: String) -> Result<
 }
 
 #[tauri::command]
-pub(crate) fn search_repository(path: String, query: String, kind: String) -> Result<Value, String> {
+pub(crate) async fn search_repository(path: String, query: String, kind: String) -> Result<Value, String> {
+    tauri::async_runtime::spawn_blocking(move || search_repository_blocking(path, query, kind))
+        .await
+        .map_err(|error| format!("Git worker failed: {error}"))?
+}
+
+fn search_repository_blocking(path: String, query: String, kind: String) -> Result<Value, String> {
     let root = repo_root(&path)?;
     let needle = query.trim();
     if needle.is_empty() || needle.len() > 200 {
@@ -162,7 +192,7 @@ pub(crate) fn open_worktree_in_editor(path: String, location: String, editor: St
     if !destination.is_dir() {
         return Err("Worktree is no longer available".into());
     }
-    let known = crate::git::advanced::worktrees::list_worktrees(root.to_string_lossy().to_string())?;
+    let known = crate::git::advanced::worktrees::list_worktrees_blocking(root.to_string_lossy().to_string())?;
     if !known.iter().any(|w| Path::new(&w.path).canonicalize().ok().as_ref() == Some(&destination)) {
         return Err("Path is not a registered worktree".into());
     }
@@ -191,7 +221,7 @@ pub(crate) fn git_update_submodule(path: String, submodule: String) -> Result<St
     if submodule.is_empty() || submodule.starts_with('-') || submodule.contains(['\0', '\n', '\r']) {
         return Err("Invalid submodule path".into());
     }
-    let modules = git_submodules(path)?;
+    let modules = git_submodules_blocking(path)?;
     let valid = modules["entries"]
         .as_array()
         .is_some_and(|items| items.iter().any(|item| item["path"].as_str() == Some(&submodule)));

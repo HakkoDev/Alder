@@ -1,11 +1,23 @@
 use crate::*;
 
 #[tauri::command]
-pub(crate) fn git_operation_state(path: String) -> Result<GitOperationState, String> {
+pub(crate) async fn git_operation_state(path: String) -> Result<GitOperationState, String> {
+    tauri::async_runtime::spawn_blocking(move || git_operation_state_blocking(path))
+        .await
+        .map_err(|error| format!("Git worker failed: {error}"))?
+}
+
+fn git_operation_state_blocking(path: String) -> Result<GitOperationState, String> {
     operation_state_at(&repo_root(&path)?)
 }
 #[tauri::command]
-pub(crate) fn list_worktrees(path: String) -> Result<Vec<WorktreeInfo>, String> {
+pub(crate) async fn list_worktrees(path: String) -> Result<Vec<WorktreeInfo>, String> {
+    tauri::async_runtime::spawn_blocking(move || list_worktrees_blocking(path))
+        .await
+        .map_err(|error| format!("Git worker failed: {error}"))?
+}
+
+pub(crate) fn list_worktrees_blocking(path: String) -> Result<Vec<WorktreeInfo>, String> {
     let root = repo_root(&path)?;
     let main_root = git_run(&root, &["rev-parse", "--show-toplevel"])?.trim().to_owned();
     let raw = git_run(&root, &["worktree", "list", "--porcelain", "-z"])?;
@@ -77,7 +89,7 @@ pub(crate) fn remove_worktree(path: String, location: String) -> Result<(), Stri
     if canonical == root {
         return Err("Cannot remove the selected working directory".into());
     }
-    let known = list_worktrees(path)?;
+    let known = list_worktrees_blocking(path)?;
     if !known.iter().any(|w| Path::new(&w.path).canonicalize().ok().as_ref() == Some(&canonical)) {
         return Err("Path is not a registered worktree".into());
     }
@@ -91,7 +103,7 @@ pub(crate) fn set_worktree_lock(path: String, location: String, locked: bool) ->
     if dest == root {
         return Err("Cannot lock the selected working directory".into());
     }
-    let known = list_worktrees(path)?;
+    let known = list_worktrees_blocking(path)?;
     if !known.iter().any(|w| Path::new(&w.path).canonicalize().ok().as_ref() == Some(&dest)) {
         return Err("Path is not a registered worktree".into());
     }
@@ -109,7 +121,7 @@ pub(crate) fn set_worktree_lock(path: String, location: String, locked: bool) ->
 pub(crate) fn move_worktree(path: String, location: String, destination: String) -> Result<(), String> {
     let root = repo_root(&path)?;
     let source = Path::new(&location).canonicalize().map_err(err)?;
-    let known = list_worktrees(path)?;
+    let known = list_worktrees_blocking(path)?;
     if !known.iter().any(|w| Path::new(&w.path).canonicalize().ok().as_ref() == Some(&source)) {
         return Err("Not a registered worktree".into());
     }
