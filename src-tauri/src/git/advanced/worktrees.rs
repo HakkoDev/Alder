@@ -103,3 +103,23 @@ pub(crate) fn set_worktree_lock(path: String, location: String, locked: bool) ->
     }
     Ok(())
 }
+
+/// Move only registered, unlocked worktrees. Git refuses dirty worktrees by default.
+#[tauri::command]
+pub(crate) fn move_worktree(path: String, location: String, destination: String) -> Result<(), String> {
+    let root = repo_root(&path)?;
+    let source = Path::new(&location).canonicalize().map_err(err)?;
+    let known = list_worktrees(path)?;
+    if !known.iter().any(|w| Path::new(&w.path).canonicalize().ok().as_ref() == Some(&source)) {
+        return Err("Not a registered worktree".into());
+    }
+    if source == root {
+        return Err("Cannot move the active working directory".into());
+    }
+    let target = Path::new(&destination);
+    if !target.is_absolute() || target.exists() || !target.parent().is_some_and(|p| p.is_dir()) {
+        return Err("Choose an unused absolute destination with an existing parent".into());
+    }
+    git_run(&root, &["worktree", "move", "--", &source.to_string_lossy(), &target.to_string_lossy()])?;
+    Ok(())
+}

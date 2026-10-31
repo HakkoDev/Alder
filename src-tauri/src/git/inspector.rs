@@ -169,3 +169,34 @@ pub(crate) fn open_worktree_in_editor(path: String, location: String, editor: St
     crate::process::command(&editor).arg(&destination).spawn().map_err(err)?;
     Ok(())
 }
+
+/// Change only LFS patterns, never rewrite already committed files.
+#[tauri::command]
+pub(crate) fn git_lfs_pattern(path: String, pattern: String, track: bool) -> Result<String, String> {
+    let root = repo_root(&path)?;
+    if pattern.trim().is_empty() || pattern.len() > 200 || pattern.starts_with('-') || pattern.contains(['\n', '\r', '\0']) {
+        return Err("Invalid LFS pattern".into());
+    }
+    if track {
+        git_run(&root, &["lfs", "track", "--", &pattern])
+    } else {
+        git_run(&root, &["lfs", "untrack", "--", &pattern])
+    }
+}
+
+/// Initialize a single submodule only when it is declared in .gitmodules.
+#[tauri::command]
+pub(crate) fn git_update_submodule(path: String, submodule: String) -> Result<String, String> {
+    let root = repo_root(&path)?;
+    if submodule.is_empty() || submodule.starts_with('-') || submodule.contains(['\0', '\n', '\r']) {
+        return Err("Invalid submodule path".into());
+    }
+    let modules = git_submodules(path)?;
+    let valid = modules["entries"]
+        .as_array()
+        .is_some_and(|items| items.iter().any(|item| item["path"].as_str() == Some(&submodule)));
+    if !valid {
+        return Err("Submodule is not registered in this repository".into());
+    }
+    git_run(&root, &["submodule", "update", "--init", "--", &submodule])
+}

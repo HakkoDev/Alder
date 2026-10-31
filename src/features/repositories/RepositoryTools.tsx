@@ -66,6 +66,13 @@ export function RepositoryTools({ path }: { path: string }) {
     const [submodules, setSubmodules] = useState<SubmoduleDiagnostic | null>(null);
     const [trees, setTrees] = useState<{ path: string; branch?: string }[]>([]);
     const [treePath, setTreePath] = useState("");
+    const [newTreePath, setNewTreePath] = useState("");
+    const [newTreeBranch, setNewTreeBranch] = useState("");
+    const [createBranch, setCreateBranch] = useState(true);
+    const [moveTreePath, setMoveTreePath] = useState("");
+    const [lfsPattern, setLfsPattern] = useState("");
+    const [selectedModule, setSelectedModule] = useState("");
+    const [pendingOperation, setPendingOperation] = useState<(() => Promise<unknown>) | null>(null);
     const [comparison, setComparison] = useState<WorktreeComparison | null>(null);
     const [kind, setKind] = useState<SearchKind>("files");
     const [query, setQuery] = useState("");
@@ -112,6 +119,7 @@ export function RepositoryTools({ path }: { path: string }) {
         setPreview("");
         setPreviewReady(false);
         setConfirmation(null);
+        setPendingOperation(null);
         void Promise.all([git.diagnostics(path), git.lfsStatus(path), git.submodules(path), git.worktrees(path)])
             .then(([d, l, s, w]) => {
                 if (!active) return;
@@ -157,6 +165,26 @@ export function RepositoryTools({ path }: { path: string }) {
         setConfirmation({ action, title, description, label });
     }
 
+    async function executeOperation(operation: () => Promise<unknown>, label: string) {
+        if (busy) return;
+        setBusy(true);
+        try {
+            await operation();
+            toast.success(`${label} completed`);
+            setComparison(null);
+            await refresh();
+        } catch (error) {
+            toast.error(errorText(error));
+        } finally {
+            setBusy(false);
+        }
+    }
+
+    function confirmOperation(title: string, description: string, label: string, operation: () => Promise<unknown>) {
+        setPendingOperation(() => operation);
+        setConfirmation({ action: "custom", title, description, label });
+    }
+
     async function search() {
         const needle = query.trim();
         if (!needle) {
@@ -194,7 +222,6 @@ export function RepositoryTools({ path }: { path: string }) {
         <div className="inspector-view">
             <div className="inspector-intro">
                 <div>
-                    <div className="inspector-eyebrow">REPOSITORY INSPECTOR</div>
                     <h2>
                         Repository health <span>&amp; tools</span>
                     </h2>
@@ -391,7 +418,118 @@ export function RepositoryTools({ path }: { path: string }) {
                                 <ExternalLink size={14} /> VS Code
                             </Button>
                         </div>
-                        {!otherTrees.length && <p className="inspector-hint">No secondary worktrees yet. Create one from the Worktrees tab.</p>}
+                        {!otherTrees.length && <p className="inspector-hint">No secondary worktrees yet. Create one below.</p>}
+                        <div className="inspector-subsection">
+                            <div>
+                                <strong>Create worktree</strong>
+                                <p>Choose an unused absolute directory and a new or existing branch.</p>
+                            </div>
+                            <Input
+                                aria-label="New worktree directory"
+                                placeholder="Absolute directory path"
+                                value={newTreePath}
+                                onChange={(event) => setNewTreePath(event.target.value)}
+                            />
+                            <Input
+                                aria-label="Worktree branch"
+                                placeholder="Branch name"
+                                value={newTreeBranch}
+                                onChange={(event) => setNewTreeBranch(event.target.value)}
+                            />
+                            <label className="inspector-branch-toggle">
+                                <input
+                                    type="checkbox"
+                                    checked={createBranch}
+                                    onChange={(event) => setCreateBranch(event.target.checked)}
+                                />{" "}
+                                <span>Create new branch from HEAD</span>
+                            </label>
+                            <div className="inspector-button-row">
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    disabled={busy || !newTreePath.trim() || !newTreeBranch.trim()}
+                                    onClick={() =>
+                                        confirmOperation("Create Git worktree?", `Create ${newTreePath} for branch ${newTreeBranch}?`, "Create worktree", () =>
+                                            git.addWorktree(path, newTreePath.trim(), newTreeBranch.trim(), createBranch),
+                                        )
+                                    }
+                                >
+                                    Create worktree
+                                </Button>
+                            </div>
+                        </div>
+                        {treePath && (
+                            <div className="inspector-subsection">
+                                <div>
+                                    <strong>Manage selected worktree</strong>
+                                    <p>Dirty worktrees cannot be removed or moved. Locked worktrees must be unlocked first.</p>
+                                </div>
+                                <Input
+                                    aria-label="Move worktree destination"
+                                    placeholder="New absolute worktree directory"
+                                    value={moveTreePath}
+                                    onChange={(event) => setMoveTreePath(event.target.value)}
+                                />
+                                <div className="inspector-button-row">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={busy || !moveTreePath.trim()}
+                                        onClick={() =>
+                                            confirmOperation("Move worktree?", `Move ${treePath} to ${moveTreePath}?`, "Move worktree", () =>
+                                                git.moveWorktree(path, treePath, moveTreePath.trim()),
+                                            )
+                                        }
+                                    >
+                                        Move
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={busy}
+                                        onClick={() =>
+                                            confirmOperation("Lock worktree?", `Lock ${treePath} against pruning and removal?`, "Lock worktree", () =>
+                                                git.setWorktreeLock(path, treePath, true),
+                                            )
+                                        }
+                                    >
+                                        Lock
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={busy}
+                                        onClick={() =>
+                                            confirmOperation("Unlock worktree?", `Unlock ${treePath}?`, "Unlock worktree", () =>
+                                                git.setWorktreeLock(path, treePath, false),
+                                            )
+                                        }
+                                    >
+                                        Unlock
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="destructive"
+                                        size="sm"
+                                        disabled={busy}
+                                        onClick={() =>
+                                            confirmOperation(
+                                                "Remove worktree?",
+                                                `Remove ${treePath}? Git will refuse if it contains uncommitted changes.`,
+                                                "Remove worktree",
+                                                () => git.removeWorktree(path, treePath),
+                                            )
+                                        }
+                                    >
+                                        Remove
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
                         {comparison && (
                             <div className="inspector-result">
                                 <strong>Comparison result</strong>
@@ -463,6 +601,47 @@ export function RepositoryTools({ path }: { path: string }) {
                                     {lfs.installed ? lfs.version : "Install Git LFS to use large-file features."}
                                 </p>
                                 {lfs.tracked && <pre className="inspector-preview">{lfs.tracked}</pre>}
+                                <div className="inspector-subsection">
+                                    <strong>LFS patterns</strong>
+                                    <p className="inspector-hint">Track or untrack a file pattern in .gitattributes. Commit that change separately.</p>
+                                    <Input
+                                        aria-label="Git LFS pattern"
+                                        placeholder="e.g. *.psd"
+                                        value={lfsPattern}
+                                        onChange={(event) => setLfsPattern(event.target.value)}
+                                    />
+                                    <div className="inspector-button-row">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            disabled={busy || !lfs.installed || !lfsPattern.trim()}
+                                            onClick={() =>
+                                                confirmOperation("Track LFS pattern?", `Add ${lfsPattern} to LFS tracking?`, "Track", () =>
+                                                    git.lfsPattern(path, lfsPattern.trim(), true),
+                                                )
+                                            }
+                                        >
+                                            Track pattern
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            disabled={busy || !lfs.installed || !lfsPattern.trim()}
+                                            onClick={() =>
+                                                confirmOperation(
+                                                    "Untrack LFS pattern?",
+                                                    `Remove ${lfsPattern} from LFS tracking? Existing objects are not migrated.`,
+                                                    "Untrack",
+                                                    () => git.lfsPattern(path, lfsPattern.trim(), false),
+                                                )
+                                            }
+                                        >
+                                            Untrack pattern
+                                        </Button>
+                                    </div>
+                                </div>
                                 {lfs.files.length > 0 && (
                                     <div
                                         className="inspector-submodule-list"
@@ -559,6 +738,51 @@ export function RepositoryTools({ path }: { path: string }) {
                                 ) : (
                                     <div className="inspector-empty">
                                         <ShieldCheck size={16} /> This repository has no submodules.
+                                    </div>
+                                )}
+                                {submodules.configured && (
+                                    <div className="inspector-subsection">
+                                        <label
+                                            className="inspector-field-label"
+                                            htmlFor="inspector-submodule-select"
+                                        >
+                                            SUBMODULE
+                                        </label>
+                                        <Select
+                                            value={selectedModule || "none"}
+                                            onValueChange={(value) => setSelectedModule(value === "none" ? "" : value)}
+                                        >
+                                            <SelectTrigger id="inspector-submodule-select">
+                                                <SelectValue placeholder="Choose submodule" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="none">Choose submodule</SelectItem>
+                                                {submodules.entries.map((entry) => (
+                                                    <SelectItem
+                                                        key={entry.path}
+                                                        value={entry.path}
+                                                    >
+                                                        {entry.path} · {entry.state}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            disabled={busy || !selectedModule}
+                                            onClick={() =>
+                                                confirmOperation(
+                                                    "Initialize selected submodule?",
+                                                    `Initialize/update ${selectedModule} to the configured revision?`,
+                                                    "Update submodule",
+                                                    () => git.updateSubmodule(path, selectedModule),
+                                                )
+                                            }
+                                        >
+                                            Initialize/update selected
+                                        </Button>
                                     </div>
                                 )}
                                 <div className="inspector-button-row">
@@ -676,7 +900,10 @@ export function RepositoryTools({ path }: { path: string }) {
             <Dialog.Dialog
                 open={confirmation !== null}
                 onOpenChange={(open) => {
-                    if (!open && !busy) setConfirmation(null);
+                    if (!open && !busy) {
+                        setConfirmation(null);
+                        setPendingOperation(null);
+                    }
                 }}
             >
                 <Dialog.DialogContent className="inspector-confirm-dialog">
@@ -697,10 +924,16 @@ export function RepositoryTools({ path }: { path: string }) {
                             type="button"
                             disabled={busy}
                             onClick={() => {
-                                if (!confirmation) return;
+                                if (!confirmation || busy) return;
                                 const action = confirmation;
+                                const operation = pendingOperation;
                                 setConfirmation(null);
-                                void maintenance(action.action, action.label);
+                                setPendingOperation(null);
+                                if (action.action === "custom" && operation) {
+                                    void executeOperation(operation, action.label);
+                                } else {
+                                    void maintenance(action.action, action.label);
+                                }
                             }}
                         >
                             {confirmation?.label}

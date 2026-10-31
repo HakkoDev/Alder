@@ -126,6 +126,7 @@ export const git = {
     addWorktree: (path: string, location: string, branchName: string, newBranch: boolean) =>
         call<void>("add_worktree", { path, location, branchName, newBranch }),
     removeWorktree: (path: string, location: string) => call<void>("remove_worktree", { path, location }),
+    moveWorktree: (path: string, location: string, destination: string) => call<void>("move_worktree", { path, location, destination }),
     stashes: (path: string) => call<StashInfo[]>("list_stashes", { path }),
     createStash: (path: string, message: string, includeUntracked: boolean) => call<string>("create_stash", { path, message, includeUntracked }),
     stashAction: (path: string, reference: string, action: "show" | "apply" | "drop") => call<string>("stash_action", { path, reference, action }),
@@ -142,6 +143,8 @@ export const git = {
     conflictVersions: (path: string, file: string) => call<ConflictVersions>("conflict_versions", { path, file }),
     saveConflict: (path: string, file: string, content: string) => call<void>("save_conflict_resolution", { path, file, content }),
     diagnostics: (path: string) => call<RepositoryDiagnostic>("repository_diagnostics", { path }),
+    lfsPattern: (path: string, pattern: string, track: boolean) => call<string>("git_lfs_pattern", { path, pattern, track }),
+    updateSubmodule: (path: string, submodule: string) => call<string>("git_update_submodule", { path, submodule }),
     lfsStatus: (path: string) => call<LfsDiagnostic>("git_lfs_status", { path }),
     submodules: (path: string) => call<SubmoduleDiagnostic>("git_submodules", { path }),
     maintenance: (path: string, action: string) => call<string>("git_maintenance_action", { path, action }),
