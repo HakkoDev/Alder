@@ -73,74 +73,94 @@ pub(crate) fn github_json(root: &Path, args: &[&str]) -> Result<serde_json::Valu
     serde_json::from_str(&output).map_err(|e| format!("GitHub returned invalid JSON: {e}"))
 }
 #[tauri::command]
-pub(crate) fn github_auth() -> Result<serde_json::Value, String> {
-    let output = github_cli(None, &["auth", "status", "--active"])?;
-    Ok(serde_json::json!({"authenticated":true,"message":output.trim()}))
+pub(crate) async fn github_auth() -> Result<serde_json::Value, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let output = github_cli(None, &["auth", "status", "--active"])?;
+        Ok(serde_json::json!({"authenticated":true,"message":output.trim()}))
+    })
+    .await
+    .map_err(|error| format!("GitHub worker failed: {error}"))?
 }
 #[tauri::command]
-pub(crate) fn github_repository(path: String) -> Result<serde_json::Value, String> {
-    let root = repo_root(&path)?;
-    github_json(
-        &root,
-        &[
-            "repo",
-            "view",
-            "--json",
-            "nameWithOwner,description,url,isPrivate,defaultBranchRef,viewerPermission",
-        ],
-    )
+pub(crate) async fn github_repository(path: String) -> Result<serde_json::Value, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let root = repo_root(&path)?;
+        github_json(
+            &root,
+            &[
+                "repo",
+                "view",
+                "--json",
+                "nameWithOwner,description,url,isPrivate,defaultBranchRef,viewerPermission",
+            ],
+        )
+    })
+    .await
+    .map_err(|error| format!("GitHub worker failed: {error}"))?
 }
 #[tauri::command]
-pub(crate) fn github_pull_requests(path: String) -> Result<serde_json::Value, String> {
-    let root = repo_root(&path)?;
-    github_json(
-        &root,
-        &[
-            "pr",
-            "list",
-            "--state",
-            "open",
-            "--limit",
-            "100",
-            "--json",
-            "number,title,state,isDraft,author,headRefName,baseRefName,reviewDecision,statusCheckRollup,url,updatedAt",
-        ],
-    )
+pub(crate) async fn github_pull_requests(path: String) -> Result<serde_json::Value, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let root = repo_root(&path)?;
+        github_json(
+            &root,
+            &[
+                "pr",
+                "list",
+                "--state",
+                "open",
+                "--limit",
+                "100",
+                "--json",
+                "number,title,state,isDraft,author,headRefName,baseRefName,reviewDecision,statusCheckRollup,url,updatedAt",
+            ],
+        )
+    })
+    .await
+    .map_err(|error| format!("GitHub worker failed: {error}"))?
 }
 #[tauri::command]
-pub(crate) fn github_issues(path: String) -> Result<serde_json::Value, String> {
-    let root = repo_root(&path)?;
-    github_json(
-        &root,
-        &[
-            "issue",
-            "list",
-            "--state",
-            "open",
-            "--limit",
-            "100",
-            "--json",
-            "number,title,author,labels,url,updatedAt",
-        ],
-    )
+pub(crate) async fn github_issues(path: String) -> Result<serde_json::Value, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let root = repo_root(&path)?;
+        github_json(
+            &root,
+            &[
+                "issue",
+                "list",
+                "--state",
+                "open",
+                "--limit",
+                "100",
+                "--json",
+                "number,title,author,labels,url,updatedAt",
+            ],
+        )
+    })
+    .await
+    .map_err(|error| format!("GitHub worker failed: {error}"))?
 }
 #[tauri::command]
-pub(crate) fn github_pr_detail(path: String, number: u32) -> Result<serde_json::Value, String> {
-    if number == 0 {
-        return Err("Invalid pull request number".into());
-    }
-    let root = repo_root(&path)?;
-    let id = number.to_string();
-    github_json(
-        &root,
-        &[
-            "pr",
-            "view",
-            &id,
-            "--json",
-            "number,title,body,url,author,state,mergeable,reviewDecision,latestReviews,comments,files,commits,statusCheckRollup,headRefName,baseRefName",
-        ],
-    )
+pub(crate) async fn github_pr_detail(path: String, number: u32) -> Result<serde_json::Value, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        if number == 0 {
+            return Err("Invalid pull request number".into());
+        }
+        let root = repo_root(&path)?;
+        let id = number.to_string();
+        github_json(
+            &root,
+            &[
+                "pr",
+                "view",
+                &id,
+                "--json",
+                "number,title,body,url,author,state,mergeable,reviewDecision,latestReviews,comments,files,commits,statusCheckRollup,headRefName,baseRefName",
+            ],
+        )
+    })
+    .await
+    .map_err(|error| format!("GitHub worker failed: {error}"))?
 }
 #[tauri::command]
 pub(crate) fn github_pr_create(path: String, title: String, body: String, base: String, draft: bool) -> Result<String, String> {
@@ -217,40 +237,60 @@ pub(crate) fn github_pr_checkout_worktree(path: String, number: u32, location: S
     Ok(target)
 }
 #[tauri::command]
-pub(crate) fn github_notifications(path: String, page: u32) -> Result<serde_json::Value, String> {
-    let root = repo_root(&path)?;
-    github_api(&root, "repos/{owner}/{repo}/notifications", page)
+pub(crate) async fn github_notifications(path: String, page: u32) -> Result<serde_json::Value, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let root = repo_root(&path)?;
+        github_api(&root, "repos/{owner}/{repo}/notifications", page)
+    })
+    .await
+    .map_err(|error| format!("GitHub worker failed: {error}"))?
 }
 #[tauri::command]
-pub(crate) fn github_releases(path: String, page: u32) -> Result<serde_json::Value, String> {
-    let root = repo_root(&path)?;
-    github_api(&root, "repos/{owner}/{repo}/releases", page)
+pub(crate) async fn github_releases(path: String, page: u32) -> Result<serde_json::Value, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let root = repo_root(&path)?;
+        github_api(&root, "repos/{owner}/{repo}/releases", page)
+    })
+    .await
+    .map_err(|error| format!("GitHub worker failed: {error}"))?
 }
 #[tauri::command]
-pub(crate) fn github_tags(path: String, page: u32) -> Result<serde_json::Value, String> {
-    let root = repo_root(&path)?;
-    github_api(&root, "repos/{owner}/{repo}/tags", page)
+pub(crate) async fn github_tags(path: String, page: u32) -> Result<serde_json::Value, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let root = repo_root(&path)?;
+        github_api(&root, "repos/{owner}/{repo}/tags", page)
+    })
+    .await
+    .map_err(|error| format!("GitHub worker failed: {error}"))?
 }
 #[tauri::command]
-pub(crate) fn github_rate_limit(path: String) -> Result<serde_json::Value, String> {
-    let root = repo_root(&path)?;
-    github_json(&root, &["api", "rate_limit"])
+pub(crate) async fn github_rate_limit(path: String) -> Result<serde_json::Value, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let root = repo_root(&path)?;
+        github_json(&root, &["api", "rate_limit"])
+    })
+    .await
+    .map_err(|error| format!("GitHub worker failed: {error}"))?
 }
 
 #[tauri::command]
-pub(crate) fn github_issue_detail(path: String, number: u32) -> Result<serde_json::Value, String> {
-    if number == 0 {
-        return Err("Invalid issue number".into());
-    }
-    let root = repo_root(&path)?;
-    github_json(
-        &root,
-        &[
-            "issue",
-            "view",
-            &number.to_string(),
-            "--json",
-            "number,title,body,url,state,author,labels,comments,createdAt,updatedAt",
-        ],
-    )
+pub(crate) async fn github_issue_detail(path: String, number: u32) -> Result<serde_json::Value, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        if number == 0 {
+            return Err("Invalid issue number".into());
+        }
+        let root = repo_root(&path)?;
+        github_json(
+            &root,
+            &[
+                "issue",
+                "view",
+                &number.to_string(),
+                "--json",
+                "number,title,body,url,state,author,labels,comments,createdAt,updatedAt",
+            ],
+        )
+    })
+    .await
+    .map_err(|error| format!("GitHub worker failed: {error}"))?
 }
