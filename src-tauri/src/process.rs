@@ -2,17 +2,22 @@
 //! suppress consoles for ALL Git, gh and helper subprocesses, including piped Git apply.
 use std::process::Command;
 
-#[cfg(windows)]
-use std::os::windows::process::CommandExt;
-
-#[cfg(windows)]
-const CREATE_NO_WINDOW: u32 = 0x0800_0000;
-
 pub(crate) fn command(program: &str) -> Command {
-    let mut command = Command::new(program);
-    #[cfg(windows)]
-    command.creation_flags(CREATE_NO_WINDOW);
-    command
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+
+        let mut command = Command::new(program);
+        command.creation_flags(CREATE_NO_WINDOW);
+        command
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        Command::new(program)
+    }
 }
 
 #[tauri::command]
