@@ -51,17 +51,13 @@ export function useRepositoryData({ activeRepoPath, activeFile, stagedDiff, repo
                 if (!valid()) return;
                 setStatus(primary);
                 setLoadingRepo(false);
+                const supplemental = Promise.allSettled([git.worktrees(path), git.stashes(path), git.operationState(path), git.remotes(path)]);
                 const [historyResult, branchResult] = await Promise.allSettled([git.history(path, 100), git.branches(path)]);
                 if (!valid()) return;
                 setLoadingHistory(false);
                 if (historyResult.status === "fulfilled") setHistory(historyResult.value);
                 if (branchResult.status === "fulfilled") setBranches(branchResult.value);
-                const [trees, stashResult, op, remoteResult] = await Promise.allSettled([
-                    git.worktrees(path),
-                    git.stashes(path),
-                    git.operationState(path),
-                    git.remotes(path),
-                ]);
+                const [trees, stashResult, op, remoteResult] = await supplemental;
                 if (!valid()) return;
                 setWorktrees(trees.status === "fulfilled" ? trees.value : []);
                 setStashes(stashResult.status === "fulfilled" ? stashResult.value : []);

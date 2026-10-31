@@ -1,11 +1,21 @@
 use crate::*;
 
 #[tauri::command]
-pub(crate) fn repo_status(path: String) -> Result<RepoStatus, String> {
+pub(crate) async fn repo_status(path: String) -> Result<RepoStatus, String> {
+    tauri::async_runtime::spawn_blocking(move || repo_status_blocking(path))
+        .await
+        .map_err(|error| format!("Git worker failed: {error}"))?
+}
+fn repo_status_blocking(path: String) -> Result<RepoStatus, String> {
     status_at(&repo_root(&path)?)
 }
 #[tauri::command]
-pub(crate) fn commit_history(path: String, limit: usize) -> Result<Vec<Commit>, String> {
+pub(crate) async fn commit_history(path: String, limit: usize) -> Result<Vec<Commit>, String> {
+    tauri::async_runtime::spawn_blocking(move || commit_history_blocking(path, limit))
+        .await
+        .map_err(|error| format!("Git worker failed: {error}"))?
+}
+fn commit_history_blocking(path: String, limit: usize) -> Result<Vec<Commit>, String> {
     let root = repo_root(&path)?;
     let limit = limit.clamp(1, 500).to_string();
     // Unit and record delimiters avoid ambiguities caused by spaces, commas and regular tabs.
@@ -42,7 +52,12 @@ pub(crate) fn commit_history(path: String, limit: usize) -> Result<Vec<Commit>, 
         .collect())
 }
 #[tauri::command]
-pub(crate) fn list_branches(path: String) -> Result<Vec<Branch>, String> {
+pub(crate) async fn list_branches(path: String) -> Result<Vec<Branch>, String> {
+    tauri::async_runtime::spawn_blocking(move || list_branches_blocking(path))
+        .await
+        .map_err(|error| format!("Git worker failed: {error}"))?
+}
+fn list_branches_blocking(path: String) -> Result<Vec<Branch>, String> {
     let root = repo_root(&path)?;
     let raw = git_run(&root, &["branch", "--all", "--format=%(refname:short)%09%(HEAD)%09%(refname)"])?;
     Ok(raw
