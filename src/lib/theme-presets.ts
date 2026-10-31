@@ -145,10 +145,27 @@ function mixHex(base: string, overlay: string, amount: number): string {
     return rgbToHex(baseRed + (overlayRed - baseRed) * amount, baseGreen + (overlayGreen - baseGreen) * amount, baseBlue + (overlayBlue - baseBlue) * amount);
 }
 
+// WCAG 2.2 relative luminance and text-contrast helpers.
+function relativeLuminance(color: string): number {
+    const channels = hexToRgb(color).map((channel) => {
+        const value = channel / 255;
+        return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+}
+
+export function contrastRatio(foreground: string, background: string): number {
+    const a = relativeLuminance(foreground);
+    const b = relativeLuminance(background);
+    return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+
 function readableText(background: string): string {
-    const [red, green, blue] = hexToRgb(background);
-    const luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255;
-    return luminance > 0.58 ? "#0a0a0a" : "#ffffff";
+    return contrastRatio("#000000", background) >= contrastRatio("#ffffff", background) ? "#000000" : "#ffffff";
+}
+
+function accessibleText(foreground: string, background: string, minRatio = 4.5): string {
+    return contrastRatio(foreground, background) >= minRatio ? foreground : readableText(background);
 }
 
 function palette(mode: ThemeMode, seed: PaletteSeed): ThemePalette {
@@ -157,20 +174,20 @@ function palette(mode: ThemeMode, seed: PaletteSeed): ThemePalette {
     const cardForeground = seed.cardForeground ?? seed.foreground;
     const popover = seed.popover ?? card;
     const popoverForeground = seed.popoverForeground ?? cardForeground;
-    const primaryForeground = seed.primaryForeground ?? readableText(seed.primary);
-    const secondaryForeground = seed.secondaryForeground ?? readableText(seed.secondary);
+    const primaryForeground = accessibleText(seed.primaryForeground ?? readableText(seed.primary), seed.primary);
+    const secondaryForeground = accessibleText(seed.secondaryForeground ?? readableText(seed.secondary), seed.secondary);
     const muted = seed.muted ?? mixHex(seed.background, seed.foreground, dark ? 0.075 : 0.055);
-    const accentForeground = seed.accentForeground ?? readableText(seed.accent);
+    const accentForeground = accessibleText(seed.accentForeground ?? readableText(seed.accent), seed.accent);
     const destructive = seed.destructive ?? (dark ? "#f87171" : "#dc3545");
-    const destructiveForeground = seed.destructiveForeground ?? readableText(destructive);
+    const destructiveForeground = accessibleText(seed.destructiveForeground ?? readableText(destructive), destructive);
     const input = seed.input ?? seed.border;
     const ring = seed.ring ?? seed.primary;
     const sidebar = seed.sidebar ?? mixHex(seed.background, dark ? "#000000" : seed.foreground, dark ? 0.12 : 0.025);
     const sidebarForeground = seed.sidebarForeground ?? seed.foreground;
     const sidebarPrimary = seed.sidebarPrimary ?? seed.primary;
-    const sidebarPrimaryForeground = seed.sidebarPrimaryForeground ?? primaryForeground;
+    const sidebarPrimaryForeground = accessibleText(seed.sidebarPrimaryForeground ?? primaryForeground, sidebarPrimary);
     const sidebarAccent = seed.sidebarAccent ?? seed.accent;
-    const sidebarAccentForeground = seed.sidebarAccentForeground ?? accentForeground;
+    const sidebarAccentForeground = accessibleText(seed.sidebarAccentForeground ?? accentForeground, sidebarAccent);
     const sidebarBorder = seed.sidebarBorder ?? seed.border;
     const sidebarRing = seed.sidebarRing ?? ring;
     const primaryHover = mixHex(seed.primary, dark ? "#ffffff" : "#000000", dark ? 0.12 : 0.08);
@@ -185,17 +202,17 @@ function palette(mode: ThemeMode, seed: PaletteSeed): ThemePalette {
 
     return {
         background: seed.background,
-        foreground: seed.foreground,
+        foreground: accessibleText(seed.foreground, seed.background),
         card,
-        cardForeground,
+        cardForeground: accessibleText(cardForeground, card),
         popover,
-        popoverForeground,
+        popoverForeground: accessibleText(popoverForeground, popover),
         primary: seed.primary,
         primaryForeground,
         secondary: seed.secondary,
         secondaryForeground,
         muted,
-        mutedForeground: seed.mutedForeground,
+        mutedForeground: accessibleText(seed.mutedForeground, seed.background),
         accent: seed.accent,
         accentForeground,
         destructive,
@@ -204,7 +221,7 @@ function palette(mode: ThemeMode, seed: PaletteSeed): ThemePalette {
         input,
         ring,
         sidebar,
-        sidebarForeground,
+        sidebarForeground: accessibleText(sidebarForeground, sidebar),
         sidebarPrimary,
         sidebarPrimaryForeground,
         sidebarAccent,
@@ -1328,11 +1345,11 @@ const tweakcnPresets = {
         },
         {
             background: "#121113",
-            foreground: "#c1c1c1",
-            primary: "#e78a53",
+            foreground: "#eeeeed",
+            primary: "#f19b5e",
             primaryForeground: "#121113",
             secondary: "#5f8787",
-            mutedForeground: "#888888",
+            mutedForeground: "#b0aba8",
             accent: "#333333",
             accentForeground: "#c1c1c1",
             border: "#222222",
@@ -2061,7 +2078,7 @@ const alderPalette = preset(
         ring: "#526FC8",
     },
     {
-        background: "#0D121D",
+        background: "#090D15",
         foreground: "#E8EDF7",
         primary: "#92A9F4",
         primaryForeground: "#111A30",
@@ -2071,9 +2088,9 @@ const alderPalette = preset(
         accent: "#243553",
         accentForeground: "#DCE6FF",
         border: "#273248",
-        card: "#151D2B",
-        popover: "#192337",
-        sidebar: "#101724",
+        card: "#121927",
+        popover: "#192235",
+        sidebar: "#0B111C",
         sidebarForeground: "#DFE6F5",
         sidebarAccent: "#202E49",
         sidebarBorder: "#253047",
@@ -2086,7 +2103,14 @@ export const themePresets = {
     alder: {
         label: "Alder (default)",
         light: { ...alderPalette.light, style: styledTweakcnPresets["sage-garden"].light.style },
-        dark: { ...alderPalette.dark, style: styledTweakcnPresets["sage-garden"].dark.style },
+        dark: {
+            ...alderPalette.dark,
+            style: {
+                ...styledTweakcnPresets["sage-garden"].dark.style,
+                fontSans: "Inter, Segoe UI, ui-sans-serif, system-ui, sans-serif",
+                fontMono: "JetBrains Mono, Consolas, ui-monospace, monospace",
+            },
+        },
     },
     ...styledTweakcnPresets,
 };
