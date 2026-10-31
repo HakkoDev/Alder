@@ -141,5 +141,24 @@ export const git = {
     recoverBranch: (path: string, hash: string, name: string) => call<void>("create_recovery_branch", { path, hash, name }),
     conflictVersions: (path: string, file: string) => call<ConflictVersions>("conflict_versions", { path, file }),
     saveConflict: (path: string, file: string, content: string) => call<void>("save_conflict_resolution", { path, file, content }),
+    diagnostics: (path: string) => call<RepositoryDiagnostic>("repository_diagnostics", { path }),
+    lfsStatus: (path: string) => call<LfsDiagnostic>("git_lfs_status", { path }),
+    submodules: (path: string) => call<SubmoduleDiagnostic>("git_submodules", { path }),
+    maintenance: (path: string, action: string) => call<string>("git_maintenance_action", { path, action }),
+    openWorktreeInEditor: (path: string, location: string, editor: "zed" | "code") => call<void>("open_worktree_in_editor", { path, location, editor }),
+    compareWorktrees: (path: string, location: string) => call<WorktreeComparison>("git_worktree_comparison", { path, location }),
+    searchRepository: (path: string, query: string, kind: "branches" | "commits" | "files") => call<string[]>("search_repository", { path, query, kind }),
     setWorktreeLock: (path: string, location: string, locked: boolean) => call<void>("set_worktree_lock", { path, location, locked }),
 };
+
+export type RepositoryDiagnostic = {
+    branch: string | null;
+    upstream: string | null;
+    remotes: { name: string; url: string | null; hasTrackingRefs: boolean }[];
+    goneBranches: string[];
+    missingIdentity: string[];
+    issues: string[];
+};
+export type LfsDiagnostic = { installed: boolean; version: string | null; tracked: string; files: string[] };
+export type SubmoduleDiagnostic = { configured: boolean; status: string[] };
+export type WorktreeComparison = { left: string; right: string; summary: string; divergence: string };
