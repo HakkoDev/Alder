@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
+
 const read = (file) => readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
 
 test("changes list only mounts visible file rows, not every context-menu instance", () => {

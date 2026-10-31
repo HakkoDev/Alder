@@ -1,10 +1,10 @@
 import { ArrowUpRight, CircleAlert, CircleDot, GitBranch, GitPullRequest, LoaderCircle, Plus, RefreshCw, ShieldCheck } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { type GitHubIssue, type GitHubIssueDetail, type GitHubPRDetail, type GitHubPullRequest, type GitHubRepository, github } from "../lib/git-api";
 import { openGitHubUrl } from "../lib/external";
-import { MarkdownBody } from "./github/MarkdownBody";
+import { type GitHubIssue, type GitHubIssueDetail, type GitHubPRDetail, type GitHubPullRequest, type GitHubRepository, github } from "../lib/git-api";
 import { GitHubExtras } from "./GitHubExtras";
+import { MarkdownBody } from "./github/MarkdownBody";
 import { Button } from "./ui/button";
 import * as Dialog from "./ui/dialog";
 import { Input } from "./ui/input";
@@ -78,12 +78,12 @@ export function GitHubPanel({ path, onCounts }: { path: string; onCounts?: (prs:
     }, [load]);
     useEffect(() => {
         setVisibleCount(40);
-    }, [tab, path]);
+    }, []);
     useEffect(() => {
         setSelected(null);
         setSelectedIssue(null);
         setShowActivity(false);
-    }, [path]);
+    }, []);
     useEffect(() => {
         let cancelled = false;
         if (selectedIssue === null) {
@@ -358,10 +358,10 @@ export function GitHubPanel({ path, onCounts }: { path: string; onCounts?: (prs:
                     ) : issueDetail ? (
                         <div className="github-detail">
                             <MarkdownBody body={issueDetail.body} />
-                            {issueDetail.comments?.map((comment, index) => (
+                            {issueDetail.comments?.map((comment) => (
                                 <div
                                     className="github-comment"
-                                    key={index}
+                                    key={comment.id}
                                 >
                                     <strong>{comment.author?.login || "Contributor"}</strong>
                                     <MarkdownBody body={comment.body} />

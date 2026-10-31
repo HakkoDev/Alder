@@ -34,7 +34,7 @@ export interface GitHubIssue {
 export interface GitHubIssueDetail extends GitHubIssue {
     body: string;
     state: string;
-    comments: { author: { login: string }; body: string }[];
+    comments: { author: { login: string }; body: string; id: string }[];
 }
 export interface GitHubPRDetail extends GitHubPullRequest {
     body: string;

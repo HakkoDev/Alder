@@ -1,4 +1,4 @@
-import { Check, ClipboardCopy, ExternalLink, FileCode2, FileText, FolderOpen, Ban, GitCommitHorizontal, Trash2 } from "lucide-react";
+import { Ban, Check, ClipboardCopy, ExternalLink, FileCode2, FileText, FolderOpen, GitCommitHorizontal, Trash2 } from "lucide-react";
 import type { Change } from "../../lib/types";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "../ui/context-menu";
 

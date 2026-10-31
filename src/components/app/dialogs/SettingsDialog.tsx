@@ -1,10 +1,9 @@
-import { RefreshCw } from "lucide-react";
-import type { AlderUpdater } from "@/components/updater/update-center";
-import { X } from "lucide-react";
+import { RefreshCw, X } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 import { IconButton, PButton } from "@/components/app/controls";
 import { Settings } from "@/components/app/Settings";
 import * as Dialog from "@/components/ui/dialog";
+import type { AlderUpdater } from "@/components/updater/update-center";
 import { useNavigationStore } from "@/features/app/navigation-store";
 import type { AppController } from "@/features/app/useAppController";
 

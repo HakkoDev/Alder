@@ -1,10 +1,10 @@
-import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { test } from "node:test";
+
 const read = (file) => readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
 test("toolbar changes primary action based on working and staged selection", () => {
     const text = read("src/features/changes/components/ChangeList.tsx");

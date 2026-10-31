@@ -6,7 +6,7 @@ const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 test("all menu portals have solid runtime theme backgrounds", () => {
     const css = read("../src/styles.css");
     assert.match(css, /\.alder-portal-menu\s*\{\s*background-color:\s*var\(--popover\)/);
-    for (const path of ["context-menu.tsx", "dropdown-menu.tsx", "select.tsx"]) assert.match(read("../src/components/ui/" + path), /alder-portal-menu/);
+    for (const path of ["context-menu.tsx", "dropdown-menu.tsx", "select.tsx"]) assert.match(read(`../src/components/ui/${path}`), /alder-portal-menu/);
 });
 test("dialogs have one centering transform and explicit overlay background", () => {
     const d = read("../src/components/ui/dialog.tsx");
@@ -20,7 +20,7 @@ test("custom App close buttons suppress built-in close and palette has only esca
         ["../src/components/app/dialogs/DangerDialog.tsx", "danger-explanation"],
         ["../src/features/repositories/components/RepositoryDialog.tsx", "alder-modal-description"],
     ]) {
-        assert.match(read(path), new RegExp('Dialog\\.DialogContent\\s+hideClose\\s+className="modal-content"\\s+aria-describedby="' + label + '"'));
+        assert.match(read(path), new RegExp(`Dialog\\.DialogContent\\s+hideClose\\s+className="modal-content"\\s+aria-describedby="${label}"`));
     }
     assert.match(read("../src/components/app/dialogs/SettingsDialog.tsx"), /Dialog\.DialogContent\s+hideClose\s+className="modal-content settings-content"/);
     assert.match(read("../src/components/app/dialogs/CommandPalette.tsx"), /Dialog\.DialogContent\s+hideClose\s+className="modal-content palette-content"/);

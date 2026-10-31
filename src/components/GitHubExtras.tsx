@@ -1,9 +1,9 @@
 import { ArrowUpRight, LoaderCircle, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { openGitHubUrl } from "../lib/external";
 import { type GitHubNotification, type GitHubRateLimit, type GitHubRelease, type GitHubTag, github } from "../lib/git-api";
 import { Button } from "./ui/button";
-import { openGitHubUrl } from "../lib/external";
 import { Skeleton } from "./ui/skeleton";
 
 type Section = "notifications" | "releases" | "tags" | "limits";

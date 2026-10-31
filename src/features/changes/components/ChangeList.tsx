@@ -1,7 +1,6 @@
+import { Check, ChevronDown, ChevronRight, RefreshCw, Search, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { getPreferences } from "@/lib/preferences";
-import { Check, ChevronDown, ChevronRight, RefreshCw, Search, SlidersHorizontal } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 import { IconButton } from "@/components/app/controls";
 import { FileRow } from "@/components/app/FileRow";
@@ -10,13 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
+import { useNavigationStore } from "@/features/app/navigation-store";
 import type { AppController } from "@/features/app/useAppController";
 import { useChangesStore } from "@/features/changes/changes-store";
-import { useNavigationStore } from "@/features/app/navigation-store";
 import { CommitForm } from "@/features/changes/components/CommitForm";
+import { useVirtualRows } from "@/features/changes/useVirtualRows";
 import { git } from "@/lib/git-api";
 import { t } from "@/lib/i18n";
-import { useVirtualRows } from "@/features/changes/useVirtualRows";
+import { getPreferences } from "@/lib/preferences";
 
 type Props = Pick<
     AppController,

@@ -1,6 +1,7 @@
-import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import test from "node:test";
+
 const source = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 test("GitHub only loads active PR/issue list and defers activity", () => {
     const s = source("src/components/GitHubPanel.tsx");

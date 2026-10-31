@@ -16,5 +16,5 @@ export function rustSource() {
     const files = gather(base);
     const root = readFileSync(join(base, "lib.rs"), "utf8");
     // Preserve handler registration after the operation modules for source contracts.
-    return files.join("\n") + "\n" + root;
+    return `${files.join("\n")}\n${root}`;
 }

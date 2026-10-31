@@ -13,15 +13,13 @@ const root = document.getElementById("root");
 if (!root) throw new Error("Alder: missing root element");
 ReactDOM.createRoot(root).render(
     <React.StrictMode>
-        <>
-            <App />
-            <Toaster
-                position="bottom-right"
-                theme="system"
-                richColors
-                closeButton
-                visibleToasts={4}
-            />
-        </>
+        <App />
+        <Toaster
+            position="bottom-right"
+            theme="system"
+            richColors
+            closeButton
+            visibleToasts={4}
+        />
     </React.StrictMode>,
 );

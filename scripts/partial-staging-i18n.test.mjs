@@ -35,11 +35,11 @@ test("selected line patch stages only one addition then can unstage it", () => {
         const lines = diff.trimEnd().split("\n");
         const h = lines.findIndex((x) => x.startsWith("@@ "));
         const group = lines.slice(h);
-        const chosen = group.findIndex((x) => x === "+new line one");
+        const chosen = group.indexOf("+new line one");
         const body = group
             .slice(1)
-            .flatMap((row, i) => (row.startsWith("+") ? (i + 1 === chosen ? [row] : []) : row.startsWith("-") ? [" " + row.slice(1)] : [row]));
-        const patch = [...lines.slice(0, h), group[0], ...body].join("\n") + "\n";
+            .flatMap((row, i) => (row.startsWith("+") ? (i + 1 === chosen ? [row] : []) : row.startsWith("-") ? [` ${row.slice(1)}`] : [row]));
+        const patch = `${[...lines.slice(0, h), group[0], ...body].join("\n")}\n`;
         git(dir, ["apply", "--cached", "--recount", "--unidiff-zero", "--check", "-"], patch);
         git(dir, ["apply", "--cached", "--recount", "--unidiff-zero", "-"], patch);
         assert.match(git(dir, ["diff", "--cached"]), /\+new line one/);

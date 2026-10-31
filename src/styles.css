@@ -1538,7 +1538,7 @@ kbd {
     color: var(--muted-foreground);
 }
 .visually-hidden {
-    position: absolute !important;
+    position: absolute;
     width: 1px;
     height: 1px;
     padding: 0;
@@ -1703,9 +1703,9 @@ html[data-density="compact"] .file-row .file-select {
     *,
     *::before,
     *::after {
-        animation: none !important;
-        transition: none !important;
-        scroll-behavior: auto !important;
+        animation: none;
+        transition: none;
+        scroll-behavior: auto;
     }
 }
 
@@ -1905,7 +1905,7 @@ html[data-density="compact"] .file-row .file-select {
     overflow-wrap: anywhere;
 }
 .advanced-empty {
-    margin: 16px 0 !important;
+    margin: 16px 0;
 }
 .reflog-list {
     display: flex;
@@ -2488,7 +2488,7 @@ html[data-density="compact"] .file-row .file-select {
 }
 @media (max-width: 650px) {
     .changes-layout {
-        display: flex !important;
+        display: flex;
         flex-direction: column;
         height: auto;
     }
@@ -2515,7 +2515,7 @@ html[data-density="compact"] .file-row .file-select {
 
 /* Portaled shadcn primitives: resolve from Alder runtime theme variables. */
 [data-radix-popper-content-wrapper] {
-    z-index: 120 !important;
+    z-index: 120;
 }
 .alder-portal-menu {
     background-color: var(--popover);
@@ -2614,14 +2614,14 @@ html[data-density="compact"] .file-row .file-select {
     height: 56px;
 }
 [data-sonner-toaster] {
-    font-family: var(--font-sans, system-ui) !important;
-    z-index: 9999 !important;
+    font-family: var(--font-sans, system-ui);
+    z-index: 9999;
 }
 [data-sonner-toast] {
-    background: var(--popover) !important;
-    color: var(--popover-foreground, var(--foreground)) !important;
-    border: 1px solid var(--border) !important;
-    box-shadow: var(--shadow) !important;
+    background: var(--popover);
+    color: var(--popover-foreground, var(--foreground));
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
 }
 @media (prefers-reduced-motion: reduce) {
     .animate-pulse {
@@ -3061,7 +3061,7 @@ html[data-density="compact"] .file-row .file-select {
     .topbar-command-search span,
     .topbar-command-search kbd,
     .topbar-action-divider {
-        display: none !important;
+        display: none;
     }
     .sidebar-provider[data-sidebar-state="collapsed"] .topbar-command-search span,
     .sidebar-provider[data-sidebar-state="collapsed"] .topbar-command-search kbd {
@@ -3297,13 +3297,13 @@ html[data-density="compact"] .file-row .file-select {
     align-items: center;
     justify-content: center;
     flex: 0 0 18px;
-    padding: 0 !important;
+    padding: 0;
     height: 19px;
-    color: var(--muted-foreground) !important;
+    color: var(--muted-foreground);
     cursor: pointer;
 }
 .file-group-collapse:hover {
-    color: var(--foreground) !important;
+    color: var(--foreground);
 }
 .file-group-select {
     flex: 1;
@@ -3322,7 +3322,7 @@ html[data-density="compact"] .file-row .file-select {
     display: flex;
     flex-direction: column;
     gap: 9px;
-    background: var(--popover, var(--surface)) !important;
+    background: var(--popover, var(--surface));
 }
 .changes-file-search-popover input {
     background: var(--background);

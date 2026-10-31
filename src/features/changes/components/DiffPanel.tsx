@@ -1,13 +1,13 @@
-import { useMemo } from "react";
 import { FileCode2, FileText, GitCompareArrows } from "lucide-react";
+import { useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { Empty } from "@/components/app/controls";
 import { DiffText } from "@/components/app/DiffText";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { AppController } from "@/features/app/useAppController";
 import { useChangesStore } from "@/features/changes/changes-store";
-import { git } from "@/lib/git-api";
 import { useVirtualRows } from "@/features/changes/useVirtualRows";
+import { git } from "@/lib/git-api";
 
 type Props = Pick<AppController, "loadingDiff" | "diff" | "busy" | "perform"> & {
     activeRepo: NonNullable<AppController["activeRepo"]>;

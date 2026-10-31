@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
 import type { UIEvent } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /** Virtualizes fixed-height rows without adding another dependency to the app. */
 export function useVirtualRows(rowHeight: number, count: number, overscan = 8) {

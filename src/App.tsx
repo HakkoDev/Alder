@@ -1,4 +1,3 @@
-import { UpdateCenter, useAlderUpdater } from "@/components/updater/update-center";
 import { AppContent } from "@/components/app/AppContent";
 import { AppFooter } from "@/components/app/AppFooter";
 import { AppHeader } from "@/components/app/AppHeader";
@@ -6,6 +5,7 @@ import { AppSidebar } from "@/components/app/AppSidebar";
 import { CommandPalette } from "@/components/app/dialogs/CommandPalette";
 import { DangerDialog } from "@/components/app/dialogs/DangerDialog";
 import { SettingsDialog } from "@/components/app/dialogs/SettingsDialog";
+import { UpdateCenter, useAlderUpdater } from "@/components/updater/update-center";
 import { BranchActionDialog } from "@/features/branches/BranchActionDialog";
 import { RepositoryDialog } from "@/features/repositories/components/RepositoryDialog";
 import { SidebarInset, SidebarProvider } from "./components/ui/sidebar";
