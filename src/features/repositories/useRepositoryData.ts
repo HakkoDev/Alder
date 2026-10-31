@@ -47,28 +47,34 @@ export function useRepositoryData({ activeRepoPath, activeFile, stagedDiff, repo
             setLoadingRepo(true);
             setLoadingHistory(true);
             try {
+                // Start independent requests immediately. Slow history/remote queries
+                // must never delay the working-tree status or repository switching.
+                const load = <T>(task: Promise<T>, apply: (value: T) => void) => {
+                    void task
+                        .then((value) => {
+                            if (valid()) apply(value);
+                        })
+                        .catch(() => {});
+                };
+                load(git.worktrees(path), setWorktrees);
+                load(git.stashes(path), setStashes);
+                load(git.operationState(path), setOperation);
+                load(git.remotes(path), setRemotes);
+                load(git.branches(path), setBranches);
+                load(git.reflog(path), setReflog);
+                void git
+                    .history(path, 100)
+                    .then((value) => {
+                        if (valid()) setHistory(value);
+                    })
+                    .catch(() => {})
+                    .finally(() => {
+                        if (valid()) setLoadingHistory(false);
+                    });
                 const primary = await git.status(path);
                 if (!valid()) return;
                 setStatus(primary);
                 setLoadingRepo(false);
-                const supplemental = Promise.allSettled([git.worktrees(path), git.stashes(path), git.operationState(path), git.remotes(path)]);
-                const [historyResult, branchResult] = await Promise.allSettled([git.history(path, 100), git.branches(path)]);
-                if (!valid()) return;
-                setLoadingHistory(false);
-                if (historyResult.status === "fulfilled") setHistory(historyResult.value);
-                if (branchResult.status === "fulfilled") setBranches(branchResult.value);
-                const [trees, stashResult, op, remoteResult] = await supplemental;
-                if (!valid()) return;
-                setWorktrees(trees.status === "fulfilled" ? trees.value : []);
-                setStashes(stashResult.status === "fulfilled" ? stashResult.value : []);
-                setOperation(op.status === "fulfilled" ? op.value : idleOperation());
-                setRemotes(remoteResult.status === "fulfilled" ? remoteResult.value : []);
-                void git
-                    .reflog(path)
-                    .then((value) => {
-                        if (valid()) setReflog(value);
-                    })
-                    .catch(() => {});
             } catch (error) {
                 if (!valid()) return;
                 setLoadingRepo(false);

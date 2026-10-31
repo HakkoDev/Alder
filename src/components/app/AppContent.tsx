@@ -176,7 +176,12 @@ export function AppContent(props: Props) {
                                 />
                             </div>
                         )}
-                        {view === "inspector" && <RepositoryTools path={activeRepo.path} />}
+                        {view === "inspector" && (
+                            <RepositoryTools
+                                key={activeRepo.id}
+                                path={activeRepo.path}
+                            />
+                        )}
                         {view === "agents" && (
                             <div className="content-card future-card">
                                 <Empty

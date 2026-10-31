@@ -2103,9 +2103,18 @@ html[data-density="compact"] .file-row .file-select {
     min-width: 0;
     border-radius: 7px;
 }
-.repo-nav-entry:hover,
+/* A hover is not a selection: never paint two repository rows as active. */
+.repo-nav-entry:hover:not(.selected) {
+    background: transparent;
+    outline: 1px solid var(--sidebar-border);
+    outline-offset: -1px;
+}
 .repo-nav-entry.selected {
     background: var(--surface-hover);
+}
+.repo-nav-entry.selected .repo-nav-item {
+    color: var(--foreground);
+    font-weight: 650;
 }
 .repo-nav-entry .repo-nav-item {
     flex: 1;
@@ -3751,7 +3760,7 @@ html[data-density="compact"] .file-row .file-select {
 
 /* v0.4: native Tauri dropdown interactions and repository tools visual consistency. */
 [data-radix-popper-content-wrapper] {
-    z-index: 2000 !important;
+    z-index: 2000;
     pointer-events: auto;
 }
 .alder-portal-menu {
