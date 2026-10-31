@@ -65,7 +65,6 @@ export function AppSidebar(props: Props) {
                     </div>
                     <div className="brand-text">
                         <strong>Alder</strong>
-                        <span>Developer workspace</span>
                     </div>
                 </div>
                 <DropdownMenu>
