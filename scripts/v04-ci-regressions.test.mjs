@@ -5,7 +5,8 @@ import test from "node:test";
 const read = (name) => readFileSync(new URL(`../${name}`, import.meta.url), "utf8");
 test("repository tools search has submit button and stable repository-qualified results", () => {
     const source = read("src/features/repositories/RepositoryTools.tsx");
-    assert.match(source, /<button\s+type="submit"\s+disabled=\{busy \|\| !query\.trim\(\)\}/);
+    assert.match(source, /<Button\b[^>]*\btype="submit"/s);
+    assert.match(source, /<Button\b[^>]*\bdisabled=\{busy\s*\|\|\s*!query\.trim\(\)\}/s);
     assert.match(source, /key=\{`\$\{match\.path\}:\$\{kind\}:\$\{match\.value\}`\}/);
     assert.doesNotMatch(source, /matches\.map\(\(match, index\)/);
 });

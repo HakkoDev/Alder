@@ -20,6 +20,6 @@ test("worktree editor invokes argv-based launcher only for registered worktrees"
     assert.match(backend, /Path is not a registered worktree/);
     assert.match(backend, /crate::process::command\(&editor\)\.arg\(&destination\)\.spawn\(/);
     assert.match(registration, /git::inspector::open_worktree_in_editor/);
-    assert.match(frontend, /Open in Zed/);
-    assert.match(frontend, /Open in VS Code/);
+    assert.match(frontend, /git\.openWorktreeInEditor\(path,\s*treePath,\s*"zed"\)/);
+    assert.match(frontend, /git\.openWorktreeInEditor\(path,\s*treePath,\s*"code"\)/);
 });
