@@ -25,5 +25,5 @@ test("signed updater exposes check and install in-app and supports early manual 
     assert.match(hook, /await relaunch\(\)/);
     assert.match(hook, /setProgress\(/);
     assert.match(header, /props\.updater\.checkForUpdates\(true\)/);
-    assert.match(app, /<AppHeader activeRepo=\{app\.activeRepo\} updater=\{updater\}/);
+    assert.match(app, /<AppHeader\b(?=[^>]*\bactiveRepo=\{app\.activeRepo\})(?=[^>]*\bupdater=\{updater\})[^>]*\/>/s);
 });
