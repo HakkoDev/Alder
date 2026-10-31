@@ -10,6 +10,7 @@ import { ChangesView } from "@/features/changes/components/ChangesView";
 import { HistoryView } from "@/features/history/HistoryView";
 import { RepositoryHeader } from "@/features/repositories/components/RepositoryHeader";
 import { RepositoryOverview } from "@/features/repositories/components/RepositoryOverview";
+import { RepositoryTools } from "@/features/repositories/RepositoryTools";
 import type { Repository } from "@/lib/types";
 
 type Props = Pick<
@@ -175,6 +176,7 @@ export function AppContent(props: Props) {
                                 />
                             </div>
                         )}
+                        {view === "inspector" && <RepositoryTools path={activeRepo.path} />}
                         {view === "agents" && (
                             <div className="content-card future-card">
                                 <Empty

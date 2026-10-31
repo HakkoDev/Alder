@@ -12,6 +12,7 @@ import {
     LayoutDashboard,
     MoreHorizontal,
     Plus,
+    ScanSearch,
     Trash2,
 } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
@@ -36,6 +37,7 @@ function navItems(): { id: View; icon: typeof LayoutDashboard; label: string; pl
         { id: "worktrees", icon: Layers3, label: t("nav.worktrees") },
         { id: "operations", icon: GitMerge, label: t("nav.operations") },
         { id: "pulls", icon: GitPullRequest, label: t("nav.pullRequests") },
+        { id: "inspector", icon: ScanSearch, label: "Repository tools" },
         { id: "agents", icon: Bot, label: t("nav.agents"), planned: true },
     ];
 }

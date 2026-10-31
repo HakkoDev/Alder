@@ -30,7 +30,8 @@ export const useNavigationStore = create<NavigationState>()((set) => ({
         try {
             const saved = localStorage.getItem("alder.last-view");
             return (
-                (["overview", "changes", "history", "branches", "worktrees", "operations", "pulls", "agents"] as const).find((v) => v === saved) ?? "overview"
+                (["overview", "changes", "history", "branches", "worktrees", "operations", "pulls", "inspector", "agents"] as const).find((v) => v === saved) ??
+                "overview"
             );
         } catch {
             return "overview";
