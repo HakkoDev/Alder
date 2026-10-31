@@ -13,20 +13,39 @@ pub(crate) fn repository_diagnostics(path: String) -> Result<Value, String> {
     let remotes = git_run(&root, &["remote"])?;
     let mut issues = Vec::new();
     let mut remote_info = Vec::new();
-    if remotes.trim().is_empty() { issues.push("No Git remotes configured".to_string()); }
-    if branch.is_some() && upstream.is_none() { issues.push("Current branch has no upstream tracking branch".to_string()); }
+    if remotes.trim().is_empty() {
+        issues.push("No Git remotes configured".to_string());
+    }
+    if branch.is_some() && upstream.is_none() {
+        issues.push("Current branch has no upstream tracking branch".to_string());
+    }
     for name in remotes.lines().filter(|s| !s.is_empty()) {
         let url = optional(&root, &["remote", "get-url", name]);
-        if url.is_none() { issues.push(format!("Remote {name} has no valid fetch URL")); }
+        if url.is_none() {
+            issues.push(format!("Remote {name} has no valid fetch URL"));
+        }
         let branches = optional(&root, &["for-each-ref", "--format=%(refname:short)", &format!("refs/remotes/{name}")]);
-        if branches.is_none() { issues.push(format!("Remote {name} has no locally fetched tracking refs")); }
+        if branches.is_none() {
+            issues.push(format!("Remote {name} has no locally fetched tracking refs"));
+        }
         remote_info.push(json!({"name": name, "url":url, "hasTrackingRefs":branches.is_some()}));
     }
     let stale = git_run(&root, &["for-each-ref", "--format=%(refname:short)%09%(upstream:track)", "refs/heads"])?
-        .lines().filter(|line| line.contains("[gone]")).map(|s| s.split('\t').next().unwrap_or(s).to_owned()).collect::<Vec<_>>();
-    if !stale.is_empty() { issues.push(format!("{} local branches track removed upstream refs", stale.len())); }
-    let identity = ["user.name", "user.email"].iter().filter(|key| optional(&root, &["config", "--get", key]).is_none()).map(|s| s.to_string()).collect::<Vec<_>>();
-    if !identity.is_empty() { issues.push(format!("Missing Git configuration: {}", identity.join(", "))); }
+        .lines()
+        .filter(|line| line.contains("[gone]"))
+        .map(|s| s.split('\t').next().unwrap_or(s).to_owned())
+        .collect::<Vec<_>>();
+    if !stale.is_empty() {
+        issues.push(format!("{} local branches track removed upstream refs", stale.len()));
+    }
+    let identity = ["user.name", "user.email"]
+        .iter()
+        .filter(|key| optional(&root, &["config", "--get", key]).is_none())
+        .map(|s| s.to_string())
+        .collect::<Vec<_>>();
+    if !identity.is_empty() {
+        issues.push(format!("Missing Git configuration: {}", identity.join(", ")));
+    }
     Ok(json!({"branch":branch,"upstream":upstream,"remotes":remote_info,"goneBranches":stale,"missingIdentity":identity,"issues":issues}))
 }
 
@@ -34,23 +53,44 @@ pub(crate) fn repository_diagnostics(path: String) -> Result<Value, String> {
 pub(crate) fn git_lfs_status(path: String) -> Result<Value, String> {
     let root = repo_root(&path)?;
     let installed = git_run(&root, &["lfs", "version"]).ok();
-    let tracked = if installed.is_some() { git_run(&root, &["lfs", "track"]).unwrap_or_default() } else { String::new() };
-    let files = if installed.is_some() { git_run(&root, &["lfs", "ls-files"]).unwrap_or_default() } else { String::new() };
-    Ok(json!({"installed":installed.is_some(),"version":installed,"tracked":tracked,"files":files.lines().take(150).collect::<Vec<_>>(), "fileCount":files.lines().count() }))
+    let tracked = if installed.is_some() {
+        git_run(&root, &["lfs", "track"]).unwrap_or_default()
+    } else {
+        String::new()
+    };
+    let files = if installed.is_some() {
+        git_run(&root, &["lfs", "ls-files"]).unwrap_or_default()
+    } else {
+        String::new()
+    };
+    Ok(
+        json!({"installed":installed.is_some(),"version":installed,"tracked":tracked,"files":files.lines().take(150).collect::<Vec<_>>(), "fileCount":files.lines().count() }),
+    )
 }
 
 #[tauri::command]
 pub(crate) fn git_submodules(path: String) -> Result<Value, String> {
     let root = repo_root(&path)?;
     let configured = root.join(".gitmodules").is_file();
-    let status = if configured { git_run(&root, &["submodule", "status", "--recursive"])?.lines().take(150).map(str::to_owned).collect::<Vec<_>>() } else { vec![] };
-    let entries = status.iter().map(|line| {
-        let marker = line.chars().next().unwrap_or(' ');
-        let details = line.get(1..).unwrap_or("");
-        let (revision, remainder) = details.split_once(' ').unwrap_or(("", details));
-        let name = remainder.split(" (").next().unwrap_or(remainder);
-        json!({"path":name,"revision":revision,"state":match marker { '-' => "uninitialized", '+' => "modified", 'U' => "conflicted", _ => "ready" }})
-    }).collect::<Vec<_>>();
+    let status = if configured {
+        git_run(&root, &["submodule", "status", "--recursive"])?
+            .lines()
+            .take(150)
+            .map(str::to_owned)
+            .collect::<Vec<_>>()
+    } else {
+        vec![]
+    };
+    let entries = status
+        .iter()
+        .map(|line| {
+            let marker = line.chars().next().unwrap_or(' ');
+            let details = line.get(1..).unwrap_or("");
+            let (revision, remainder) = details.split_once(' ').unwrap_or(("", details));
+            let name = remainder.split(" (").next().unwrap_or(remainder);
+            json!({"path":name,"revision":revision,"state":match marker { '-' => "uninitialized", '+' => "modified", 'U' => "conflicted", _ => "ready" }})
+        })
+        .collect::<Vec<_>>();
     Ok(json!({"configured":configured,"status":status,"entries":entries}))
 }
 
@@ -75,7 +115,9 @@ pub(crate) fn git_worktree_comparison(path: String, location: String) -> Result<
     let root = repo_root(&path)?;
     let destination = Path::new(&location).canonicalize().map_err(err)?;
     let known = crate::git::advanced::worktrees::list_worktrees(path)?;
-    if !known.iter().any(|w| Path::new(&w.path).canonicalize().ok().as_ref() == Some(&destination)) { return Err("Not a registered worktree".into()); }
+    if !known.iter().any(|w| Path::new(&w.path).canonicalize().ok().as_ref() == Some(&destination)) {
+        return Err("Not a registered worktree".into());
+    }
     let left = git_run(&root, &["rev-parse", "HEAD"])?.trim().to_owned();
     let right = git_run(&destination, &["rev-parse", "HEAD"])?.trim().to_owned();
     let summary = git_run(&root, &["diff", "--stat", &left, &right])?;
@@ -87,24 +129,39 @@ pub(crate) fn git_worktree_comparison(path: String, location: String) -> Result<
 pub(crate) fn search_repository(path: String, query: String, kind: String) -> Result<Value, String> {
     let root = repo_root(&path)?;
     let needle = query.trim();
-    if needle.is_empty() || needle.len() > 200 { return Err("Search must contain 1–200 characters".into()); }
+    if needle.is_empty() || needle.len() > 200 {
+        return Err("Search must contain 1–200 characters".into());
+    }
     let rows = match kind.as_str() {
-        "branches" => git_run(&root, &["for-each-ref", "--format=%(refname:short)", "refs/heads", "refs/remotes"] )?,
-        "commits" => git_run(&root, &["log", "-150", "--format=%h %s", "--fixed-strings", "--regexp-ignore-case", "--grep", needle])?,
+        "branches" => git_run(&root, &["for-each-ref", "--format=%(refname:short)", "refs/heads", "refs/remotes"])?,
+        "commits" => git_run(
+            &root,
+            &["log", "-150", "--format=%h %s", "--fixed-strings", "--regexp-ignore-case", "--grep", needle],
+        )?,
         "files" => git_run(&root, &["ls-files"])?,
         _ => return Err("Unknown repository search category".into()),
     };
-    Ok(json!(rows.lines().filter(|line| kind == "commits" || line.to_lowercase().contains(&needle.to_lowercase())).take(80).collect::<Vec<_>>()))
+    Ok(json!(rows
+        .lines()
+        .filter(|line| kind == "commits" || line.to_lowercase().contains(&needle.to_lowercase()))
+        .take(80)
+        .collect::<Vec<_>>()))
 }
 
 /// Opens an existing registered worktree in a supported editor. Never invokes a shell.
 #[tauri::command]
 pub(crate) fn open_worktree_in_editor(path: String, location: String, editor: String) -> Result<(), String> {
     let root = repo_root(&path)?;
-    if editor != "zed" && editor != "code" { return Err("Unsupported editor".into()); }
-    if !crate::git::changes::detect_editor(&editor) { return Err("Editor is not installed or is not on PATH".into()); }
+    if editor != "zed" && editor != "code" {
+        return Err("Unsupported editor".into());
+    }
+    if !crate::git::changes::detect_editor(&editor) {
+        return Err("Editor is not installed or is not on PATH".into());
+    }
     let destination = Path::new(&location).canonicalize().map_err(err)?;
-    if !destination.is_dir() { return Err("Worktree is no longer available".into()); }
+    if !destination.is_dir() {
+        return Err("Worktree is no longer available".into());
+    }
     let known = crate::git::advanced::worktrees::list_worktrees(root.to_string_lossy().to_string())?;
     if !known.iter().any(|w| Path::new(&w.path).canonicalize().ok().as_ref() == Some(&destination)) {
         return Err("Path is not a registered worktree".into());
