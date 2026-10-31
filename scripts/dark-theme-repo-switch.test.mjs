@@ -14,6 +14,6 @@ test("frequent Git repo commands run on blocking pool and supplemental requests 
     for (const name of ["repo_status", "commit_history", "list_branches"]) assert.match(backend, new RegExp(`async fn ${name}\\(`));
     assert.equal((backend.match(/spawn_blocking\(/g) || []).length, 3);
     const frontend = read("src/features/repositories/useRepositoryData.ts");
-    assert.match(frontend, /const supplemental = Promise\.allSettled/);
-    assert.match(frontend, /await supplemental/);
+    assert.match(frontend, /load\(git\.worktrees\(path\), setWorktrees\)/);
+    assert.match(frontend, /load\(git\.remotes\(path\), setRemotes\)/);
 });

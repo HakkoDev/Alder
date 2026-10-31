@@ -19,7 +19,7 @@ test("changes and diff have loading skeletons and status is independent of other
     assert.match(diffPanel, /loadingDiff\s*\?\s*\(\s*<div\s+[^>]*className="changes-loading"/);
     assert.match(repositoryData, /const primary\s*=\s*await git\.status\(path\)/);
     assert.match(repositoryData, /setStatus\(primary\)/);
-    assert.match(repositoryData, /Promise\.allSettled/);
+    assert.match(repositoryData, /load\(git\.worktrees\(path\), setWorktrees\)/);
 });
 test("repository load epochs avoid stale status and diff updates", () => {
     assert.match(app, /useRepositoryData\(/);
