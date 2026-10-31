@@ -66,7 +66,7 @@ test("LFS and submodule actions are allowlisted and require explicit confirmatio
     const ui = source("src/features/repositories/RepositoryTools.tsx");
     for (const action of ["submodule-sync", "submodule-update", "lfs-fetch", "lfs-pull", "lfs-checkout", "worktree-prune"]) {
         assert.ok(backend.includes(`"${action}"`), `Rust missing ${action}`);
-        assert.ok(ui.includes(`confirmAction("${action}"`), `UI missing confirmation for ${action}`);
+        assert.match(ui, new RegExp(`confirmAction\\s*\\(\\s*["']${action}["']`), `UI missing confirmation for ${action}`);
     }
     assert.match(backend, /Unsupported repository maintenance action/);
     assert.match(ui, /title=\{lfs\.version \|\| "Unknown"\}/);
