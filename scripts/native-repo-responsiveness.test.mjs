@@ -26,6 +26,6 @@ test("repository scans and Git metadata use nonblocking Tauri commands", () => {
 test("inspector renders diagnostics without waiting for LFS and submodules", () => {
     const source = read("src/features/repositories/RepositoryTools.tsx");
     assert.match(source, /git\.diagnostics\(path\)/);
-    assert.match(source, /git\.submodules\(path\)\.then/);
-    assert.match(source, /git\.lfsStatus\(path\)\.then/);
+    assert.match(source, /git\s*\.submodules\(path\)\s*\.then\s*\(/);
+    assert.match(source, /git\s*\.lfsStatus\(path\)\s*\.then\s*\(/);
 });
