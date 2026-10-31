@@ -1,10 +1,65 @@
+import {
+    type Activity,
+    AlertTriangle,
+    ArrowDownToLine,
+    ArrowRight,
+    CheckCircle2,
+    Code2,
+    ExternalLink,
+    FolderGit2,
+    GitBranch,
+    GitFork,
+    HardDriveDownload,
+    RefreshCw,
+    Search,
+    Server,
+    ShieldCheck,
+    Trash2,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import * as Dialog from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { git, type LfsDiagnostic, type RepositoryDiagnostic, type SubmoduleDiagnostic, type WorktreeComparison } from "@/lib/git-api";
 import { useRegistryStore } from "./registry-store";
 
 type SearchKind = "branches" | "commits" | "files";
+type SearchMatch = { path: string; repo: string; value: string };
+type Confirmation = { action: string; title: string; description: string; label: string };
 const errorText = (error: unknown) => (error instanceof Error ? error.message : String(error));
+
+function Panel({
+    icon: Icon,
+    title,
+    description,
+    children,
+    action,
+}: {
+    icon: typeof Activity;
+    title: string;
+    description?: string;
+    children: React.ReactNode;
+    action?: React.ReactNode;
+}) {
+    return (
+        <section className="inspector-panel">
+            <div className="inspector-panel-heading">
+                <div className="inspector-panel-icon">
+                    <Icon size={17} />
+                </div>
+                <div className="inspector-panel-title">
+                    <h3>{title}</h3>
+                    {description && <p>{description}</p>}
+                </div>
+                {action && <div className="inspector-panel-action">{action}</div>}
+            </div>
+            <div className="inspector-panel-body">{children}</div>
+        </section>
+    );
+}
+
 export function RepositoryTools({ path }: { path: string }) {
     const [report, setReport] = useState<RepositoryDiagnostic | null>(null);
     const [lfs, setLfs] = useState<LfsDiagnostic | null>(null);
@@ -14,10 +69,14 @@ export function RepositoryTools({ path }: { path: string }) {
     const [comparison, setComparison] = useState<WorktreeComparison | null>(null);
     const [kind, setKind] = useState<SearchKind>("files");
     const [query, setQuery] = useState("");
-    const [matches, setMatches] = useState<{ path: string; repo: string; value: string }[]>([]);
+    const [matches, setMatches] = useState<SearchMatch[]>([]);
+    const [searched, setSearched] = useState(false);
     const [busy, setBusy] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [confirmation, setConfirmation] = useState<Confirmation | null>(null);
+    const [preview, setPreview] = useState("");
     const repositories = useRegistryStore((s) => s.repos);
+
     const refresh = useCallback(async () => {
         setLoading(true);
         try {
@@ -37,14 +96,20 @@ export function RepositoryTools({ path }: { path: string }) {
             setLoading(false);
         }
     }, [path]);
+
     useEffect(() => {
         let active = true;
         setLoading(true);
         setReport(null);
         setLfs(null);
         setSubmodules(null);
+        setTrees([]);
+        setTreePath("");
         setComparison(null);
         setMatches([]);
+        setSearched(false);
+        setPreview("");
+        setConfirmation(null);
         void Promise.all([git.diagnostics(path), git.lfsStatus(path), git.submodules(path), git.worktrees(path)])
             .then(([d, l, s, w]) => {
                 if (!active) return;
@@ -63,26 +128,37 @@ export function RepositoryTools({ path }: { path: string }) {
             active = false;
         };
     }, [path]);
-    async function maintenance(action: string, label: string, confirm = false) {
-        if (confirm && !window.confirm(`${label}? This changes Git repository state.`)) return;
+
+    async function maintenance(action: string, label: string) {
         setBusy(true);
         try {
             const result = await git.maintenance(path, action);
-            toast.success(result || `${label} completed`);
-            await refresh();
+            if (action === "worktree-prune-dry-run") {
+                setPreview(result || "No stale worktree metadata found.");
+            } else {
+                toast.success(result || `${label} completed`);
+                await refresh();
+            }
         } catch (error) {
             toast.error(errorText(error));
         } finally {
             setBusy(false);
         }
     }
+
+    function confirmAction(action: string, title: string, description: string, label: string) {
+        setConfirmation({ action, title, description, label });
+    }
+
     async function search() {
         const needle = query.trim();
         if (!needle) {
             setMatches([]);
+            setSearched(false);
             return;
         }
         setBusy(true);
+        setSearched(true);
         try {
             const targets = repositories.filter((repo) => repo.available).slice(0, 30);
             const results = await Promise.allSettled(
@@ -97,204 +173,458 @@ export function RepositoryTools({ path }: { path: string }) {
             );
             const failed = results.filter((result) => result.status === "rejected").length;
             if (failed) toast.error(`${failed} repositories could not be searched`);
+        } catch (error) {
+            toast.error(errorText(error));
         } finally {
             setBusy(false);
         }
     }
+
+    const healthy = report && report.issues.length === 0 && report.goneBranches.length === 0;
+    const otherTrees = trees.filter((tree) => tree.path !== path);
+
     return (
-        <div
-            className="content-card"
-            style={{ overflowY: "auto", padding: 18, display: "grid", gap: 20 }}
-        >
-            <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div className="inspector-view">
+            <div className="inspector-intro">
                 <div>
-                    <h2>Repository tools</h2>
-                    <p className="small-muted">Read-only diagnostics, Git maintenance, LFS, submodules and multi-repo search.</p>
+                    <div className="inspector-eyebrow">REPOSITORY INSPECTOR</div>
+                    <h2>
+                        Repository health <span>&amp; tools</span>
+                    </h2>
+                    <p>Check repository configuration, manage Git extensions, and compare worktrees.</p>
                 </div>
-                <button
+                <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
                     disabled={loading || busy}
                     onClick={() => void refresh()}
                 >
+                    <RefreshCw
+                        size={14}
+                        className={loading ? "inspector-spinning" : ""}
+                    />{" "}
                     Refresh
-                </button>
-            </header>
-            {loading && <p>Inspecting repository…</p>}
-            {report && (
-                <section>
-                    <h3>Repository health</h3>
-                    <p>
-                        Branch: {report.branch ?? "Detached HEAD"} · Upstream: {report.upstream ?? "Not configured"}
-                    </p>
-                    {report.issues.length ? (
-                        <ul>
-                            {report.issues.map((issue) => (
-                                <li key={issue}>{issue}</li>
-                            ))}
-                        </ul>
-                    ) : (
-                        <p>No local configuration issues detected.</p>
-                    )}
-                    <h4>Remotes</h4>
-                    {report.remotes.map((remote) => (
-                        <p key={remote.name}>
-                            <strong>{remote.name}</strong> · {remote.url ?? "Missing URL"} ·{" "}
-                            {remote.hasTrackingRefs ? "Tracking refs available" : "Not fetched"}
-                        </p>
-                    ))}
-                    {report.goneBranches.length > 0 && <p>Branches with missing upstream references: {report.goneBranches.join(", ")}</p>}
-                    <button
-                        type="button"
-                        disabled={busy}
-                        onClick={() => void maintenance("fetch-prune", "Fetch and prune remote tracking branches", true)}
-                    >
-                        Fetch and prune remotes
-                    </button>
-                </section>
-            )}
-            {lfs && (
-                <section>
-                    <h3>Git LFS</h3>
-                    <p>{lfs.installed ? lfs.version : "Git LFS is not installed"}</p>
-                    <pre style={{ whiteSpace: "pre-wrap" }}>{lfs.tracked || "No LFS patterns configured"}</pre>
-                    <p>{lfs.files.length} listed LFS objects</p>
-                    <button
-                        type="button"
-                        disabled={busy || !lfs.installed}
-                        onClick={() => void maintenance("lfs-pull", "Download LFS objects", true)}
-                    >
-                        Pull LFS objects
-                    </button>
-                </section>
-            )}
-            {submodules && (
-                <section>
-                    <h3>Submodules</h3>
-                    <p>{submodules.configured ? `${submodules.status.length} submodule entries` : "No .gitmodules file"}</p>
-                    {submodules.status.map((line) => (
-                        <pre key={line}>{line}</pre>
-                    ))}
-                    <button
-                        type="button"
-                        disabled={busy || !submodules.configured}
-                        onClick={() => void maintenance("submodule-update", "Initialize/update submodules", true)}
-                    >
-                        Update submodules
-                    </button>
-                </section>
-            )}
-            <section>
-                <h3>Worktree comparisons and cleanup</h3>
-                <label>
-                    Compare HEAD with registered worktree{" "}
-                    <select
-                        value={treePath}
-                        onChange={(event) => setTreePath(event.target.value)}
-                    >
-                        <option value="">Choose a worktree</option>
-                        {trees
-                            .filter((tree) => tree.path !== path)
-                            .map((tree) => (
-                                <option
-                                    key={tree.path}
-                                    value={tree.path}
-                                >
-                                    {tree.branch || tree.path} · {tree.path}
-                                </option>
-                            ))}
-                    </select>
-                </label>{" "}
-                <button
-                    type="button"
-                    disabled={!treePath || busy}
-                    onClick={() => void git.openWorktreeInEditor(path, treePath, "zed").catch((error) => toast.error(errorText(error)))}
-                >
-                    Open in Zed
-                </button>{" "}
-                <button
-                    type="button"
-                    disabled={!treePath || busy}
-                    onClick={() => void git.openWorktreeInEditor(path, treePath, "code").catch((error) => toast.error(errorText(error)))}
-                >
-                    Open in VS Code
-                </button>{" "}
-                <button
-                    type="button"
-                    disabled={!treePath || busy}
-                    onClick={() =>
-                        void git
-                            .compareWorktrees(path, treePath)
-                            .then(setComparison)
-                            .catch((error) => toast.error(errorText(error)))
-                    }
-                >
-                    Compare
-                </button>
-                {comparison && (
-                    <pre style={{ whiteSpace: "pre-wrap" }}>
-                        Ahead/behind: {comparison.divergence}
-                        {"\n"}
-                        {comparison.summary || "No committed differences"}
-                    </pre>
-                )}
-                <p>
-                    <button
-                        type="button"
-                        disabled={busy}
-                        onClick={() => void maintenance("worktree-prune-dry-run", "Preview stale worktrees")}
-                    >
-                        Preview cleanup
-                    </button>{" "}
-                    <button
-                        type="button"
-                        disabled={busy}
-                        onClick={() => void maintenance("worktree-prune", "Prune stale worktree metadata", true)}
-                    >
-                        Prune stale worktrees
-                    </button>
-                </p>
-            </section>
-            <section>
-                <h3>Search across repositories</h3>
-                <p className="small-muted">Searches up to 30 available repositories. Read-only; results are limited to 250.</p>
-                <form
-                    onSubmit={(event) => {
-                        event.preventDefault();
-                        void search();
-                    }}
-                    style={{ display: "flex", gap: 8 }}
-                >
-                    <input
-                        aria-label="Search query"
-                        value={query}
-                        onChange={(event) => setQuery(event.target.value)}
-                        placeholder="Find a file, branch or commit…"
-                        maxLength={200}
-                    />
-                    <select
-                        aria-label="Search category"
-                        value={kind}
-                        onChange={(event) => setKind(event.target.value as SearchKind)}
-                    >
-                        <option value="files">Files</option>
-                        <option value="branches">Branches</option>
-                        <option value="commits">Commits</option>
-                    </select>
-                    <button
-                        type="submit"
-                        disabled={busy || !query.trim()}
-                    >
-                        Search
-                    </button>
-                </form>
-                <div aria-live="polite">
-                    {matches.map((match) => (
-                        <p key={`${match.path}:${kind}:${match.value}`}>
-                            <strong>{match.repo}</strong> · {match.value}
-                        </p>
-                    ))}
+                </Button>
+            </div>
+
+            {loading && !report && (
+                <div className="inspector-loading">
+                    <RefreshCw
+                        size={17}
+                        className="inspector-spinning"
+                    />{" "}
+                    Inspecting repository…
                 </div>
-            </section>
+            )}
+
+            {report && (
+                <>
+                    <div className="inspector-summary">
+                        <div className="inspector-summary-state">
+                            {healthy ? <CheckCircle2 size={22} /> : <AlertTriangle size={22} />}
+                            <div>
+                                <strong>{healthy ? "Looking good" : "Attention needed"}</strong>
+                                <span>
+                                    {healthy
+                                        ? "No configuration issues detected"
+                                        : `${report.issues.length + report.goneBranches.length} potential issues detected`}
+                                </span>
+                            </div>
+                        </div>
+                        <div className="inspector-summary-divider" />
+                        <div className="inspector-summary-metric">
+                            <span>Current branch</span>
+                            <strong>
+                                <GitBranch size={14} />
+                                {report.branch ?? "Detached HEAD"}
+                            </strong>
+                        </div>
+                        <div className="inspector-summary-metric">
+                            <span>Tracking</span>
+                            <strong>{report.upstream ?? "No upstream"}</strong>
+                        </div>
+                        <div className="inspector-summary-metric">
+                            <span>Remotes</span>
+                            <strong>{report.remotes.length}</strong>
+                        </div>
+                    </div>
+                    {(report.issues.length > 0 || report.goneBranches.length > 0) && (
+                        <div
+                            className="inspector-warnings"
+                            role="status"
+                        >
+                            <AlertTriangle size={17} />
+                            <div>
+                                {report.issues.map((issue) => (
+                                    <p key={issue}>{issue}</p>
+                                ))}
+                                {report.goneBranches.length > 0 && <p>Missing upstream references: {report.goneBranches.join(", ")}</p>}
+                            </div>
+                        </div>
+                    )}
+                </>
+            )}
+
+            <div className="inspector-grid">
+                <div className="inspector-column">
+                    <Panel
+                        icon={Server}
+                        title="Remotes"
+                        description="Connections and remote-tracking health"
+                        action={
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled={busy || loading}
+                                onClick={() =>
+                                    confirmAction(
+                                        "fetch-prune",
+                                        "Fetch and prune remotes?",
+                                        "Fetch remote changes and remove local remote-tracking references that no longer exist on the server.",
+                                        "Fetch & prune",
+                                    )
+                                }
+                            >
+                                Fetch &amp; prune
+                            </Button>
+                        }
+                    >
+                        {report &&
+                            (report.remotes.length ? (
+                                report.remotes.map((remote) => (
+                                    <div
+                                        className="inspector-remote"
+                                        key={remote.name}
+                                    >
+                                        <div className="inspector-remote-avatar">
+                                            <Server size={15} />
+                                        </div>
+                                        <div className="inspector-remote-details">
+                                            <strong>{remote.name}</strong>
+                                            <span title={remote.url ?? undefined}>{remote.url ?? "No remote URL configured"}</span>
+                                        </div>
+                                        <span className={`inspector-status ${remote.hasTrackingRefs ? "is-ok" : "is-muted"}`}>
+                                            {remote.hasTrackingRefs ? "Tracked" : "Not fetched"}
+                                        </span>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="inspector-empty">No remotes configured for this repository.</div>
+                            ))}
+                        {!report && <div className="inspector-empty">Loading remotes…</div>}
+                    </Panel>
+                    <Panel
+                        icon={GitFork}
+                        title="Worktrees"
+                        description="Compare branches and open workspaces in your editor"
+                    >
+                        <label
+                            htmlFor="inspector-worktree"
+                            className="inspector-field-label"
+                        >
+                            COMPARE AGAINST
+                        </label>
+                        <Select
+                            value={treePath || "none"}
+                            onValueChange={(value) => {
+                                setTreePath(value === "none" ? "" : value);
+                                setComparison(null);
+                            }}
+                        >
+                            <SelectTrigger
+                                id="inspector-worktree"
+                                className="inspector-select"
+                            >
+                                <SelectValue placeholder="Select a worktree" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="none">Choose a worktree</SelectItem>
+                                {otherTrees.map((tree) => (
+                                    <SelectItem
+                                        key={tree.path}
+                                        value={tree.path}
+                                    >
+                                        {tree.branch || "Detached HEAD"} · {tree.path}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <div className="inspector-button-row">
+                            <Button
+                                type="button"
+                                size="sm"
+                                disabled={!treePath || busy}
+                                onClick={() =>
+                                    void git
+                                        .compareWorktrees(path, treePath)
+                                        .then(setComparison)
+                                        .catch((error) => toast.error(errorText(error)))
+                                }
+                            >
+                                Compare <ArrowRight size={14} />
+                            </Button>
+                            <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                disabled={!treePath || busy}
+                                onClick={() => void git.openWorktreeInEditor(path, treePath, "zed").catch((error) => toast.error(errorText(error)))}
+                            >
+                                <Code2 size={14} /> Zed
+                            </Button>
+                            <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                disabled={!treePath || busy}
+                                onClick={() => void git.openWorktreeInEditor(path, treePath, "code").catch((error) => toast.error(errorText(error)))}
+                            >
+                                <ExternalLink size={14} /> VS Code
+                            </Button>
+                        </div>
+                        {!otherTrees.length && <p className="inspector-hint">No secondary worktrees yet. Create one from the Worktrees tab.</p>}
+                        {comparison && (
+                            <div className="inspector-result">
+                                <strong>Comparison result</strong>
+                                <span>{comparison.divergence}</span>
+                                <pre>{comparison.summary || "No committed differences"}</pre>
+                            </div>
+                        )}
+                        <div className="inspector-subsection">
+                            <div>
+                                <strong>Worktree cleanup</strong>
+                                <p>Remove stale Git metadata for deleted worktree directories.</p>
+                            </div>
+                            <div className="inspector-button-row">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={busy}
+                                    onClick={() => void maintenance("worktree-prune-dry-run", "Preview stale worktrees")}
+                                >
+                                    Preview
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={busy}
+                                    onClick={() =>
+                                        confirmAction(
+                                            "worktree-prune",
+                                            "Prune stale worktree metadata?",
+                                            "Remove references to worktrees that are no longer present. Existing worktree directories will not be deleted.",
+                                            "Prune metadata",
+                                        )
+                                    }
+                                >
+                                    <Trash2 size={14} /> Prune
+                                </Button>
+                            </div>
+                        </div>
+                        {preview && <pre className="inspector-preview">{preview}</pre>}
+                    </Panel>
+                </div>
+                <div className="inspector-column">
+                    <Panel
+                        icon={HardDriveDownload}
+                        title="Git LFS"
+                        description="Large file storage and tracked objects"
+                        action={
+                            <span className={`inspector-status ${lfs?.installed ? "is-ok" : "is-muted"}`}>{lfs?.installed ? "Installed" : "Unavailable"}</span>
+                        }
+                    >
+                        {lfs && (
+                            <>
+                                <div className="inspector-stat-row">
+                                    <div>
+                                        <span>Tracked objects</span>
+                                        <strong>{lfs.files.length}</strong>
+                                    </div>
+                                    <div>
+                                        <span>Configuration</span>
+                                        <strong>{lfs.tracked ? "Configured" : "Not configured"}</strong>
+                                    </div>
+                                </div>
+                                <p
+                                    className="inspector-hint"
+                                    title={lfs.version}
+                                >
+                                    {lfs.installed ? lfs.version : "Install Git LFS to use large-file features."}
+                                </p>
+                                {lfs.tracked && <pre className="inspector-preview">{lfs.tracked}</pre>}
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={busy || !lfs.installed}
+                                    onClick={() =>
+                                        confirmAction(
+                                            "lfs-pull",
+                                            "Download Git LFS objects?",
+                                            "Fetch Git LFS objects for the current checkout. This may download substantial data.",
+                                            "Download objects",
+                                        )
+                                    }
+                                >
+                                    <ArrowDownToLine size={14} /> Pull LFS objects
+                                </Button>
+                            </>
+                        )}
+                    </Panel>
+                    <Panel
+                        icon={FolderGit2}
+                        title="Submodules"
+                        description="Nested Git repositories and initialization"
+                        action={<span className="inspector-status is-muted">{submodules?.configured ? `${submodules.status.length} entries` : "None"}</span>}
+                    >
+                        {submodules && (
+                            <>
+                                {submodules.configured ? (
+                                    <div className="inspector-submodule-list">
+                                        {submodules.status.length ? (
+                                            submodules.status.map((line) => <code key={line}>{line}</code>)
+                                        ) : (
+                                            <p>No active submodule entries.</p>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="inspector-empty">
+                                        <ShieldCheck size={16} /> This repository has no submodules.
+                                    </div>
+                                )}
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={busy || !submodules.configured}
+                                    onClick={() =>
+                                        confirmAction(
+                                            "submodule-update",
+                                            "Initialize and update submodules?",
+                                            "Initialize missing submodules and fetch their configured revisions. This may download additional repositories.",
+                                            "Update submodules",
+                                        )
+                                    }
+                                >
+                                    <RefreshCw size={14} /> Initialize &amp; update
+                                </Button>
+                            </>
+                        )}
+                    </Panel>
+                    <Panel
+                        icon={Search}
+                        title="Search repositories"
+                        description="Find files, branches and commits across your workspace"
+                    >
+                        <form
+                            className="inspector-search-form"
+                            onSubmit={(event) => {
+                                event.preventDefault();
+                                void search();
+                            }}
+                        >
+                            <Input
+                                aria-label="Search query"
+                                value={query}
+                                onChange={(event) => {
+                                    setQuery(event.target.value);
+                                    setSearched(false);
+                                }}
+                                placeholder="Search your repositories…"
+                                maxLength={200}
+                            />
+                            <Select
+                                value={kind}
+                                onValueChange={(value) => {
+                                    setKind(value as SearchKind);
+                                    setSearched(false);
+                                }}
+                            >
+                                <SelectTrigger
+                                    aria-label="Search category"
+                                    className="inspector-search-kind"
+                                >
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="files">Files</SelectItem>
+                                    <SelectItem value="branches">Branches</SelectItem>
+                                    <SelectItem value="commits">Commits</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Button
+                                type="submit"
+                                size="sm"
+                                disabled={busy || !query.trim()}
+                            >
+                                <Search size={14} /> Search
+                            </Button>
+                        </form>
+                        <p className="inspector-hint">Searches up to 30 available repositories · 250 results maximum</p>
+                        <div
+                            className="inspector-search-results"
+                            aria-live="polite"
+                        >
+                            {searched &&
+                                (matches.length ? (
+                                    <>
+                                        <p className="inspector-field-label">{matches.length} results</p>
+                                        {matches.map((match) => (
+                                            <div
+                                                className="inspector-search-match"
+                                                key={`${match.path}:${kind}:${match.value}`}
+                                            >
+                                                <span>{match.repo}</span>
+                                                <strong>{match.value}</strong>
+                                            </div>
+                                        ))}
+                                    </>
+                                ) : (
+                                    !busy && <div className="inspector-empty">No matching {kind} found.</div>
+                                ))}
+                        </div>
+                    </Panel>
+                </div>
+            </div>
+            <Dialog.Dialog
+                open={confirmation !== null}
+                onOpenChange={(open) => {
+                    if (!open && !busy) setConfirmation(null);
+                }}
+            >
+                <Dialog.DialogContent className="inspector-confirm-dialog">
+                    <Dialog.DialogHeader>
+                        <Dialog.DialogTitle>{confirmation?.title}</Dialog.DialogTitle>
+                        <Dialog.DialogDescription>{confirmation?.description}</Dialog.DialogDescription>
+                    </Dialog.DialogHeader>
+                    <Dialog.DialogFooter>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            disabled={busy}
+                            onClick={() => setConfirmation(null)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => {
+                                if (!confirmation) return;
+                                const action = confirmation;
+                                setConfirmation(null);
+                                void maintenance(action.action, action.label);
+                            }}
+                        >
+                            {confirmation?.label}
+                        </Button>
+                    </Dialog.DialogFooter>
+                </Dialog.DialogContent>
+            </Dialog.Dialog>
         </div>
     );
 }
