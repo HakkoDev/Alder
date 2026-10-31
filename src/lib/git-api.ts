@@ -159,6 +159,10 @@ export type RepositoryDiagnostic = {
     missingIdentity: string[];
     issues: string[];
 };
-export type LfsDiagnostic = { installed: boolean; version: string | null; tracked: string; files: string[] };
-export type SubmoduleDiagnostic = { configured: boolean; status: string[] };
+export type LfsDiagnostic = { installed: boolean; version: string | null; tracked: string; files: string[]; fileCount: number };
+export type SubmoduleDiagnostic = {
+    configured: boolean;
+    status: string[];
+    entries: { path: string; revision: string; state: "uninitialized" | "modified" | "conflicted" | "ready" }[];
+};
 export type WorktreeComparison = { left: string; right: string; summary: string; divergence: string };
