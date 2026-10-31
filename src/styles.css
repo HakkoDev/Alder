@@ -83,7 +83,7 @@ button {
 }
 button:disabled {
     cursor: not-allowed;
-    opacity: 0.45;
+    opacity: 1;
 }
 a {
     color: inherit;
@@ -3751,7 +3751,7 @@ html[data-density="compact"] .file-row .file-select {
 
 /* v0.4: native Tauri dropdown interactions and repository tools visual consistency. */
 [data-radix-popper-content-wrapper] {
-    z-index: 2000;
+    z-index: 2000 !important;
     pointer-events: auto;
 }
 .alder-portal-menu {
@@ -3820,4 +3820,25 @@ html[data-density="compact"] .file-row .file-select {
     .inspector-view {
         padding: 16px;
     }
+}
+
+/* Preserve themed text contrast in disabled controls: never fade foreground and background together. */
+button:disabled,
+button[data-disabled] {
+    opacity: 1;
+    cursor: not-allowed;
+}
+button:disabled {
+    border-style: dashed;
+}
+/* Avoid color-on-color remote icons and success badges on arbitrary presets. */
+.inspector-remote-avatar {
+    background: var(--card);
+    color: var(--card-foreground, var(--foreground));
+    border: 1px solid var(--border);
+}
+.inspector-status.is-ok {
+    background: var(--card);
+    color: var(--card-foreground, var(--foreground));
+    border-color: var(--border);
 }
