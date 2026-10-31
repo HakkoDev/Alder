@@ -6,7 +6,7 @@ const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf
 
 test("background commands disable Windows console windows without changing other platforms", () => {
     const source = read("src-tauri/src/process.rs");
-    assert.match(source, /#\[cfg\(windows\)\]/);
+    assert.match(source, /#\[cfg\s*\(\s*(?:windows|target_os\s*=\s*"windows")\s*\)\s*\]/);
     assert.match(source, /use std::os::windows::process::CommandExt/);
     assert.match(source, /CREATE_NO_WINDOW:\s*u32\s*=\s*0x0800_?0000/);
     assert.match(source, /command\.creation_flags\(CREATE_NO_WINDOW\)/);
