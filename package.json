@@ -50,7 +50,7 @@
         "@tauri-apps/plugin-dialog": "^2.8.3",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
-        "lucide-react": "^0.468.0",
+        "lucide-react": "^1.63.0",
         "react": "^19.1.1",
         "react-dom": "^19.1.1",
         "sonner": "^2.0.7",
