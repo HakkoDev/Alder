@@ -6,14 +6,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-type Status = "unconfigured" | "idle" | "checking" | "current" | "available" | "installing" | "installed" | "error";
+type Status = "unconfigured" | "configuring" | "idle" | "checking" | "current" | "available" | "installing" | "installed" | "error";
 type UpdateConfiguration = { configured: boolean };
 const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 export function useAlderUpdater() {
     const [open, setOpen] = useState(false);
     const [dismissed, setDismissed] = useState(false);
-    const [status, setStatus] = useState<Status>("idle");
+    const [status, setStatus] = useState<Status>("configuring");
     const [error, setError] = useState("");
     const [version, setVersion] = useState("");
     const [releaseNotes, setReleaseNotes] = useState("");
@@ -27,14 +27,19 @@ export function useAlderUpdater() {
     const checkForUpdates = useCallback(async (manual = false) => {
         if (manual) setOpen(true);
         if (checkingRef.current || installingRef.current) return;
-        if (!configuredRef.current) {
-            setStatus("unconfigured");
-            return;
-        }
         checkingRef.current = true;
         setError("");
         setStatus("checking");
         try {
+            // A user can press Check now before startup's async capability probe finishes.
+            // Re-check configuration here instead of incorrectly reporting unconfigured.
+            const config = await invoke<UpdateConfiguration>("updater_configuration");
+            if (!aliveRef.current) return;
+            configuredRef.current = config.configured;
+            if (!config.configured) {
+                setStatus("unconfigured");
+                return;
+            }
             // Every check gets a fresh resource; never keep stale update metadata.
             const previous = updateRef.current;
             updateRef.current = null;
@@ -97,7 +102,7 @@ export function useAlderUpdater() {
 
     const installUpdate = useCallback(async () => {
         const update = updateRef.current;
-        if (!update || installingRef.current) return;
+        if (!update || installingRef.current || checkingRef.current) return;
         installingRef.current = true;
         setStatus("installing");
         setProgress(null);
@@ -143,7 +148,7 @@ export function useAlderUpdater() {
         checkForUpdates,
         installUpdate,
         hasUpdate: status === "available" && !dismissed,
-        busy: status === "checking" || status === "installing",
+        busy: status === "configuring" || status === "checking" || status === "installing",
     };
 }
 
@@ -196,7 +201,7 @@ export function UpdateCenter({ updater }: { updater: AlderUpdater }) {
                         <DialogDescription>Alder checks GitHub Releases for newer signed versions when the app opens and every six hours.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 text-sm">
-                        {status === "checking" && (
+                        {(status === "configuring" || status === "checking") && (
                             <p className="flex items-center gap-2 text-muted-foreground">
                                 <LoaderCircle className="size-4 animate-spin" /> Checking GitHub Releases…
                             </p>
@@ -248,7 +253,7 @@ export function UpdateCenter({ updater }: { updater: AlderUpdater }) {
                             <Button
                                 variant="outline"
                                 onClick={() => void updater.checkForUpdates(true)}
-                                disabled={updater.busy || status === "unconfigured"}
+                                disabled={updater.busy}
                             >
                                 <RefreshCw className={status === "checking" ? "animate-spin" : ""} /> Check now
                             </Button>

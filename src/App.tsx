@@ -33,7 +33,10 @@ export default function App() {
                     repoMenu={repoMenu}
                 />
                 <SidebarInset className="main-area">
-                    <AppHeader activeRepo={app.activeRepo} />
+                    <AppHeader
+                        activeRepo={app.activeRepo}
+                        updater={updater}
+                    />
                     <AppContent
                         setModal={app.setModal}
                         changed={app.changed}

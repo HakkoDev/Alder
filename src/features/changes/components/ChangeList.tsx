@@ -2,8 +2,9 @@ import { Check, ChevronDown, ChevronRight, RefreshCw, Search, SlidersHorizontal 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useShallow } from "zustand/react/shallow";
-import { IconButton } from "@/components/app/controls";
+import { IconButton, PButton } from "@/components/app/controls";
 import { FileRow } from "@/components/app/FileRow";
+import * as Dialog from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -64,6 +65,37 @@ export function ChangeList(props: Props) {
     const [collapsed, setCollapsed] = useState({ staged: false, unstaged: false });
     const [filter, setFilter] = useState("");
     const [searchOpen, setSearchOpen] = useState(false);
+    const [pendingDeletion, setPendingDeletion] = useState<
+        | { kind: "file"; repoPath: string; filePath: string }
+        | { kind: "bulk"; repoPath: string; action: "restore-all" | "discard-tracked" | "trash-untracked"; name: string; description: string }
+        | null
+    >(null);
+    const [deleting, setDeleting] = useState(false);
+    const confirmDeletion = async () => {
+        if (!pendingDeletion || deleting || busy || loadingRepo) return;
+        // Never execute a confirmation queued against a different repository.
+        if (pendingDeletion.repoPath !== activeRepo.path) {
+            setPendingDeletion(null);
+            return;
+        }
+        const target = pendingDeletion;
+        setDeleting(true);
+        try {
+            if (target.kind === "file") {
+                await git.trashFile(target.repoPath, target.filePath);
+                setPendingDeletion(null);
+                toast.success("File moved to Trash");
+                await loadSelected(target.repoPath);
+            } else {
+                await perform(target.name, () => git.changesBulkAction(target.repoPath, target.action));
+            }
+            setPendingDeletion(null);
+        } catch (error) {
+            toast.error(`Could not complete action: ${String(error)}`);
+        } finally {
+            setDeleting(false);
+        }
+    };
     const filteredUnstaged = useMemo(
         () => unstaged.filter((file) => file.path.toLocaleLowerCase().includes(filter.trim().toLocaleLowerCase())),
         [unstaged, filter],
@@ -111,7 +143,12 @@ export function ChangeList(props: Props) {
             : "Unstage All";
     const primaryDisabled = !!busy || loadingRepo || (!selectedWorking && !selectedIndex && !hasWorking && !hasStaged);
     const runBulk = (name: string, action: "unstage-all" | "discard-tracked" | "restore-all" | "trash-untracked" | "stash-pop", confirmText?: string) => {
-        if (confirmText && !window.confirm(confirmText)) return;
+        if (confirmText) {
+            if (action === "restore-all" || action === "discard-tracked" || action === "trash-untracked") {
+                setPendingDeletion({ kind: "bulk", repoPath: activeRepo.path, action, name, description: confirmText });
+            }
+            return;
+        }
         void perform(name, () => git.changesBulkAction(activeRepo.path, action));
     };
     const primaryAction = () => {
@@ -390,8 +427,7 @@ export function ChangeList(props: Props) {
                                         }
                                         staged={row.staged}
                                         onTrash={() => {
-                                            if (!window.confirm(`Move ${file.path} to the system Trash?`)) return;
-                                            runFileAction("File moved to Trash", () => git.trashFile(activeRepo.path, file.path), true);
+                                            setPendingDeletion({ kind: "file", repoPath: activeRepo.path, filePath: file.path });
                                         }}
                                         onCopy={(relative) => {
                                             const value = relative
@@ -425,6 +461,56 @@ export function ChangeList(props: Props) {
                     </>
                 )}
             </div>
+            <Dialog.Dialog
+                open={pendingDeletion !== null && pendingDeletion.repoPath === activeRepo.path}
+                onOpenChange={(open) => {
+                    if (!open && !deleting) setPendingDeletion(null);
+                }}
+            >
+                <Dialog.DialogContent
+                    hideClose
+                    className="modal-content"
+                    aria-describedby="delete-change-description"
+                >
+                    <div className="modal-header">
+                        <Dialog.DialogTitle>
+                            {pendingDeletion?.kind === "file" ? "Move file to Trash?" : (pendingDeletion?.name ?? "Confirm changes")}
+                        </Dialog.DialogTitle>
+                    </div>
+                    <Dialog.DialogDescription
+                        id="delete-change-description"
+                        className="dialog-description"
+                    >
+                        {pendingDeletion?.kind === "file" ? (
+                            <>
+                                Move <strong className="break-all">{pendingDeletion.filePath}</strong> to the system Trash? The file will not be removed unless
+                                you confirm.
+                            </>
+                        ) : (
+                            pendingDeletion?.description
+                        )}
+                    </Dialog.DialogDescription>
+                    <div className="modal-footer">
+                        <PButton
+                            disabled={deleting}
+                            onClick={() => setPendingDeletion(null)}
+                        >
+                            Cancel
+                        </PButton>
+                        <PButton
+                            variant="danger"
+                            disabled={deleting || !!busy || loadingRepo}
+                            onClick={() => void confirmDeletion()}
+                        >
+                            {deleting
+                                ? "Working…"
+                                : pendingDeletion?.kind === "file" || pendingDeletion?.action === "trash-untracked"
+                                  ? "Move to Trash"
+                                  : "Discard Changes"}
+                        </PButton>
+                    </div>
+                </Dialog.DialogContent>
+            </Dialog.Dialog>
             <CommitForm
                 staged={props.staged}
                 busy={props.busy}

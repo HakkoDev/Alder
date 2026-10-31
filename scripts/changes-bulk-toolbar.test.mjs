@@ -27,7 +27,8 @@ test("toolbar changes primary action based on working and staged selection", () 
     assert.match(text, /selectedIndex\s*\?\s*`Unstage Selected/);
     assert.match(text, /disabled=\{primaryDisabled\}/);
     assert.match(text, /disabled=\{!hasUntracked\}/);
-    assert.match(text, /window\.confirm\(confirmText\)/);
+    assert.match(text, /setPendingDeletion\(/);
+    assert.doesNotMatch(text, /window\.confirm/);
 });
 test("bulk actions are allow-listed and registered through Tauri, without shell parsing", () => {
     const backend = read("src-tauri/src/git/changes.rs");
