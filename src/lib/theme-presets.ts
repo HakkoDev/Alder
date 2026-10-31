@@ -164,8 +164,42 @@ function readableText(background: string): string {
     return contrastRatio("#000000", background) >= contrastRatio("#ffffff", background) ? "#000000" : "#ffffff";
 }
 
+/** Keep the supplied hue when possible; move text toward a readable neutral only as needed. */
 function accessibleText(foreground: string, background: string, minRatio = 4.5): string {
-    return contrastRatio(foreground, background) >= minRatio ? foreground : readableText(background);
+    if (contrastRatio(foreground, background) >= minRatio) return foreground;
+    const target = readableText(background);
+    for (let step = 1; step <= 100; step++) {
+        const candidate = mixHex(foreground, target, step / 100);
+        if (contrastRatio(candidate, background) >= minRatio) return candidate;
+    }
+    return target;
+}
+
+/** Ensure a foreground works against every surface where the same token is used. */
+function accessibleAcrossSurfaces(foreground: string, backgrounds: string[], minRatio = 4.5): string {
+    if (backgrounds.every((surface) => contrastRatio(foreground, surface) >= minRatio)) return foreground;
+    const candidates = ["#000000", "#ffffff"];
+    const target = candidates.find((color) => backgrounds.every((surface) => contrastRatio(color, surface) >= minRatio));
+    if (!target) {
+        // Opposing surfaces can make a shared color impossible; the caller must adjust a surface.
+        return foreground;
+    }
+    for (let step = 1; step <= 100; step++) {
+        const candidate = mixHex(foreground, target, step / 100);
+        if (backgrounds.every((surface) => contrastRatio(candidate, surface) >= minRatio)) return candidate;
+    }
+    return target;
+}
+
+/** Adjust a hover or highlighted surface rather than causing its text to change on hover. */
+function accessibleSurface(background: string, foreground: string, minRatio = 4.5): string {
+    if (contrastRatio(foreground, background) >= minRatio) return background;
+    const target = readableText(foreground);
+    for (let step = 1; step <= 100; step++) {
+        const candidate = mixHex(background, target, step / 100);
+        if (contrastRatio(foreground, candidate) >= minRatio) return candidate;
+    }
+    return target;
 }
 
 function palette(mode: ThemeMode, seed: PaletteSeed): ThemePalette {
@@ -186,12 +220,12 @@ function palette(mode: ThemeMode, seed: PaletteSeed): ThemePalette {
     const sidebarForeground = seed.sidebarForeground ?? seed.foreground;
     const sidebarPrimary = seed.sidebarPrimary ?? seed.primary;
     const sidebarPrimaryForeground = accessibleText(seed.sidebarPrimaryForeground ?? primaryForeground, sidebarPrimary);
-    const sidebarAccent = seed.sidebarAccent ?? seed.accent;
+    const sidebarAccent = accessibleSurface(seed.sidebarAccent ?? seed.accent, accessibleText(sidebarForeground, sidebar));
     const sidebarAccentForeground = accessibleText(seed.sidebarAccentForeground ?? accentForeground, sidebarAccent);
     const sidebarBorder = seed.sidebarBorder ?? seed.border;
     const sidebarRing = seed.sidebarRing ?? ring;
-    const primaryHover = mixHex(seed.primary, dark ? "#ffffff" : "#000000", dark ? 0.12 : 0.08);
-    const destructiveHover = mixHex(destructive, dark ? "#ffffff" : "#000000", dark ? 0.1 : 0.08);
+    const primaryHover = accessibleSurface(mixHex(seed.primary, dark ? "#ffffff" : "#000000", dark ? 0.12 : 0.08), primaryForeground);
+    const destructiveHover = accessibleSurface(mixHex(destructive, dark ? "#ffffff" : "#000000", dark ? 0.1 : 0.08), destructiveForeground);
     const charts = seed.charts ?? [
         seed.primary,
         seed.accent,
@@ -212,7 +246,7 @@ function palette(mode: ThemeMode, seed: PaletteSeed): ThemePalette {
         secondary: seed.secondary,
         secondaryForeground,
         muted,
-        mutedForeground: accessibleText(seed.mutedForeground, seed.background),
+        mutedForeground: accessibleAcrossSurfaces(seed.mutedForeground, [seed.background, card, popover, muted]),
         accent: seed.accent,
         accentForeground,
         destructive,
