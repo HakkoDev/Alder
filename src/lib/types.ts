@@ -47,7 +47,7 @@ export interface RepoStatus {
     behind: number;
     changes: Change[];
 }
-export type View = "overview" | "changes" | "history" | "branches" | "worktrees" | "operations" | "pulls" | "agents";
+export type View = "overview" | "changes" | "history" | "branches" | "worktrees" | "operations" | "pulls" | "inspector" | "agents";
 
 export interface WorktreeInfo {
     path: string;
