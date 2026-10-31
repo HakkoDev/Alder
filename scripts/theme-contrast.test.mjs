@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
+import { stripTypeScriptTypes } from "node:module";
 import test from "node:test";
-import { Script } from "node:vm";
 
 const pairs = [
     ["foreground", "background"],
@@ -24,18 +23,12 @@ const pairs = [
     ["mutedForeground", "muted"],
 ];
 
-test("all theme semantic text and hover pairs meet WCAG AA normal-text contrast (4.5:1)", () => {
-    const require = createRequire(import.meta.url);
-    const imported = require("typescript");
-    const ts = imported.default ?? imported;
-    assert.ok(ts.transpileModule && ts.ModuleKind && ts.ScriptTarget, "TypeScript transpiler APIs unavailable");
+test("all theme semantic text and hover pairs meet WCAG AA normal-text contrast (4.5:1)", async () => {
+    // Node 22+ can strip types without depending on the project’s TypeScript package.
+    // Loading this as a data URL also avoids importing the app or running Tauri code.
     const source = readFileSync(new URL("../src/lib/theme-presets.ts", import.meta.url), "utf8");
-    const js = ts.transpileModule(source, {
-        compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
-    }).outputText;
-    const exports = {};
-    new Script(`(function (exports) { ${js}\n})`).runInNewContext()(exports);
-    const { themePresets, contrastRatio } = exports;
+    const js = stripTypeScriptTypes(source, { mode: "strip" });
+    const { themePresets, contrastRatio } = await import(`data:text/javascript;base64,${Buffer.from(js).toString("base64")}`);
     assert.ok(themePresets && typeof contrastRatio === "function", "Unable to load theme presets and contrast helper");
 
     const failures = [];
