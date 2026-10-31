@@ -25,7 +25,9 @@ export const SelectTrigger = React.forwardRef<React.ElementRef<typeof Primitive.
 );
 export const SelectContent = React.forwardRef<React.ElementRef<typeof Primitive.Content>, React.ComponentPropsWithoutRef<typeof Primitive.Content>>(
     ({ className, children, position = "popper", ...props }, ref) => (
-        <Primitive.Portal>
+        <Primitive.Portal
+            container={typeof document !== "undefined" ? (document.querySelector<HTMLElement>("[role='dialog'][data-state='open']") ?? undefined) : undefined}
+        >
             <Primitive.Content
                 ref={ref}
                 position={position}

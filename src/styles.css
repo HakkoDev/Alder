@@ -1,11 +1,11 @@
 @import "tailwindcss";
 :root {
     color-scheme: dark;
-    --background: #0d121d;
+    --background: #090d15;
     --foreground: #e8edf7;
-    --card: #151d2b;
+    --card: #121927;
     --card-foreground: #e8edf7;
-    --popover: #192337;
+    --popover: #192235;
     --popover-foreground: #e8edf7;
     --primary: #92a9f4;
     --primary-foreground: #111a30;
@@ -20,7 +20,7 @@
     --border: #273248;
     --input: #273248;
     --ring: #92a9f4;
-    --sidebar: #101724;
+    --sidebar: #0b111c;
     --sidebar-foreground: #dfe6f5;
     --sidebar-accent: #202e49;
     --sidebar-accent-foreground: #e8edf7;
@@ -29,7 +29,7 @@
     --surface: #202a3e;
     --surface-hover: #2d3a53;
     --primary-soft: #273859;
-    --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+    --font-sans: "Inter", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
     --font-mono: JetBrains Mono, Consolas, monospace;
     --radius: 0.6rem;
     --radius-sm: 0.35rem;
@@ -1383,6 +1383,7 @@ kbd {
 }
 .settings-content {
     width: min(750px, calc(100vw - 32px));
+    overflow: visible; /* Select menus live inside the modal focus scope. */
 }
 .settings-scroll {
     overflow: auto;
@@ -3334,8 +3335,8 @@ html[data-density="compact"] .file-row .file-select {
     display: flex;
     flex-direction: column;
     gap: 22px;
-    max-width: 1480px;
-    margin: 0 auto;
+    max-width: none;
+    margin: 0;
     width: 100%;
     min-width: 0;
     overflow-y: auto;
@@ -3736,5 +3737,87 @@ html[data-density="compact"] .file-row .file-select {
     }
     .inspector-search-form > input {
         flex-basis: 100%;
+    }
+}
+
+/* Settings selects render outside the modal through Radix Portal. Keep them above the dialog. */
+[data-radix-popper-content-wrapper]:has([role="listbox"]) {
+    z-index: 1200;
+    pointer-events: auto;
+}
+.settings-content [data-radix-select-trigger] {
+    pointer-events: auto;
+}
+
+/* v0.4: native Tauri dropdown interactions and repository tools visual consistency. */
+[data-radix-popper-content-wrapper] {
+    z-index: 2000;
+    pointer-events: auto;
+}
+.alder-portal-menu {
+    position: relative;
+    z-index: 2000;
+    pointer-events: auto;
+}
+.inspector-view {
+    padding: 24px 32px 48px;
+    gap: 18px;
+}
+.inspector-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.inspector-panel {
+    background: var(--card);
+    box-shadow: 0 1px 2px #0002;
+}
+.inspector-panel-heading {
+    padding: 17px 19px;
+}
+.inspector-panel-body {
+    padding: 19px;
+}
+.inspector-intro h2 {
+    font-size: 23px;
+    letter-spacing: -0.035em;
+}
+.inspector-branch-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--foreground);
+}
+.inspector-branch-toggle input[type="checkbox"] {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--card);
+    flex: none;
+    display: grid;
+    place-content: center;
+}
+.inspector-branch-toggle input[type="checkbox"]:checked {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+.inspector-branch-toggle input[type="checkbox"]:checked::after {
+    content: "";
+    width: 8px;
+    height: 5px;
+    border: solid var(--primary-foreground);
+    border-width: 0 0 2px 2px;
+    transform: translateY(-1px) rotate(-45deg);
+}
+@media (max-width: 1150px) {
+    .inspector-grid {
+        grid-template-columns: 1fr;
+    }
+}
+@media (max-width: 780px) {
+    .inspector-view {
+        padding: 16px;
     }
 }
