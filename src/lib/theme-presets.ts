@@ -208,23 +208,25 @@ function palette(mode: ThemeMode, seed: PaletteSeed): ThemePalette {
     const cardForeground = seed.cardForeground ?? seed.foreground;
     const popover = seed.popover ?? card;
     const popoverForeground = seed.popoverForeground ?? cardForeground;
-    const primaryForeground = accessibleText(seed.primaryForeground ?? readableText(seed.primary), seed.primary);
+    const primary = dark ? accessibleSurface(seed.primary, "#10121a") : seed.primary;
+    const primaryForeground = dark ? "#10121a" : accessibleText(seed.primaryForeground ?? readableText(seed.primary), seed.primary);
     const secondaryForeground = accessibleText(seed.secondaryForeground ?? readableText(seed.secondary), seed.secondary);
     const muted = seed.muted ?? mixHex(seed.background, seed.foreground, dark ? 0.075 : 0.055);
-    const accentForeground = accessibleText(seed.accentForeground ?? readableText(seed.accent), seed.accent);
+    const accent = dark ? accessibleSurface(seed.accent, "#10121a") : seed.accent;
+    const accentForeground = dark ? "#10121a" : accessibleText(seed.accentForeground ?? readableText(seed.accent), seed.accent);
     const destructive = seed.destructive ?? (dark ? "#f87171" : "#dc3545");
     const destructiveForeground = accessibleText(seed.destructiveForeground ?? readableText(destructive), destructive);
     const input = seed.input ?? seed.border;
     const ring = seed.ring ?? seed.primary;
     const sidebar = seed.sidebar ?? mixHex(seed.background, dark ? "#000000" : seed.foreground, dark ? 0.12 : 0.025);
     const sidebarForeground = seed.sidebarForeground ?? seed.foreground;
-    const sidebarPrimary = seed.sidebarPrimary ?? seed.primary;
-    const sidebarPrimaryForeground = accessibleText(seed.sidebarPrimaryForeground ?? primaryForeground, sidebarPrimary);
+    const sidebarPrimary = dark ? accessibleSurface(seed.sidebarPrimary ?? primary, "#10121a") : (seed.sidebarPrimary ?? primary);
+    const sidebarPrimaryForeground = dark ? "#10121a" : accessibleText(seed.sidebarPrimaryForeground ?? primaryForeground, sidebarPrimary);
     const sidebarAccent = accessibleSurface(seed.sidebarAccent ?? seed.accent, accessibleText(sidebarForeground, sidebar));
     const sidebarAccentForeground = accessibleText(seed.sidebarAccentForeground ?? accentForeground, sidebarAccent);
     const sidebarBorder = seed.sidebarBorder ?? seed.border;
     const sidebarRing = seed.sidebarRing ?? ring;
-    const primaryHover = accessibleSurface(mixHex(seed.primary, dark ? "#ffffff" : "#000000", dark ? 0.12 : 0.08), primaryForeground);
+    const primaryHover = accessibleSurface(mixHex(primary, dark ? "#ffffff" : "#000000", dark ? 0.12 : 0.08), primaryForeground);
     const destructiveHover = accessibleSurface(mixHex(destructive, dark ? "#ffffff" : "#000000", dark ? 0.1 : 0.08), destructiveForeground);
     const charts = seed.charts ?? [
         seed.primary,
@@ -241,13 +243,13 @@ function palette(mode: ThemeMode, seed: PaletteSeed): ThemePalette {
         cardForeground: accessibleText(cardForeground, card),
         popover,
         popoverForeground: accessibleText(popoverForeground, popover),
-        primary: seed.primary,
+        primary,
         primaryForeground,
         secondary: seed.secondary,
         secondaryForeground,
         muted,
         mutedForeground: accessibleAcrossSurfaces(seed.mutedForeground, [seed.background, card, popover, muted]),
-        accent: seed.accent,
+        accent,
         accentForeground,
         destructive,
         destructiveForeground,

@@ -3842,3 +3842,17 @@ button:disabled {
     color: var(--card-foreground, var(--foreground));
     border-color: var(--border);
 }
+
+/* Actual text on filled accents: dark ink, not white, across every dark theme. */
+:root[data-theme-mode="dark"] .bg-primary,
+:root[data-theme-mode="dark"] .bg-accent {
+    color: var(--primary-foreground);
+}
+:root[data-theme-mode="dark"] .bg-accent {
+    color: var(--accent-foreground);
+}
+:root[data-theme-mode="dark"] .inspector-remote-icon,
+:root[data-theme-mode="dark"] .inspector-remote > svg {
+    background: var(--secondary);
+    color: var(--secondary-foreground);
+}
