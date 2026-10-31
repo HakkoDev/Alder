@@ -377,7 +377,7 @@ pub(crate) struct EditorChoice {
     available: bool,
 }
 
-fn detect_editor(program: &str) -> bool {
+pub(crate) fn detect_editor(program: &str) -> bool {
     #[cfg(windows)]
     {
         crate::process::command("where.exe").arg(program).output().is_ok_and(|out| out.status.success())
