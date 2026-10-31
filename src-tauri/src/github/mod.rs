@@ -2,18 +2,69 @@ use crate::*;
 
 // GitHub integration deliberately delegates credentials to GitHub CLI (`gh`).
 // No OAuth secret or access token is stored in Alder or passed to the renderer.
+// Installed Windows applications do not necessarily inherit the same PATH as an
+// interactive terminal. Keep `gh` in PATH as the first choice, then try common
+// per-user and system installations when it cannot be found.
+#[cfg(windows)]
+fn github_cli_windows_candidates() -> Vec<std::path::PathBuf> {
+    let mut paths = Vec::new();
+    for key in ["ProgramFiles", "ProgramW6432", "ProgramFiles(x86)"] {
+        if let Some(base) = std::env::var_os(key) {
+            paths.push(std::path::PathBuf::from(base).join("GitHub CLI").join("gh.exe"));
+        }
+    }
+    if let Some(base) = std::env::var_os("LOCALAPPDATA") {
+        let local = std::path::PathBuf::from(base);
+        paths.push(local.join("Programs").join("GitHub CLI").join("gh.exe"));
+        paths.push(local.join("Microsoft").join("WinGet").join("Links").join("gh.exe"));
+    }
+    if let Some(base) = std::env::var_os("USERPROFILE") {
+        paths.push(std::path::PathBuf::from(base).join("scoop").join("shims").join("gh.exe"));
+    }
+    if let Some(base) = std::env::var_os("ChocolateyInstall") {
+        paths.push(std::path::PathBuf::from(base).join("bin").join("gh.exe"));
+    }
+    paths.into_iter().filter(|path| path.is_file()).collect()
+}
+
 pub(crate) fn github_cli(root: Option<&Path>, args: &[&str]) -> Result<String, String> {
     let mut cmd = crate::process::command("gh");
     if let Some(path) = root {
         cmd.current_dir(path);
     }
-    let output = cmd
-        .args(args)
-        .output()
-        .map_err(|_| "GitHub CLI (gh) is not installed. Install it and run `gh auth login` in a terminal.".to_string())?;
+    let output = match cmd.args(args).output() {
+        Ok(output) => output,
+        #[cfg(windows)]
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            let mut found = None;
+            for candidate in github_cli_windows_candidates() {
+                let mut fallback = crate::process::command(candidate.to_string_lossy().as_ref());
+                if let Some(path) = root {
+                    fallback.current_dir(path);
+                }
+                match fallback.args(args).output() {
+                    Ok(output) => {
+                        found = Some(output);
+                        break;
+                    }
+                    Err(error) if error.kind() == std::io::ErrorKind::NotFound => continue,
+                    Err(error) => return Err(format!("Could not start GitHub CLI: {error}")),
+                }
+            }
+            found.ok_or_else(|| "GitHub CLI (gh.exe) not found in the installed app's PATH or common Windows installation locations. Install GitHub CLI, then restart Alder. Run `gh auth login` in a terminal if needed.".to_string())?
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            return Err("GitHub CLI (gh) not found in Alder's PATH. Install GitHub CLI, restart Alder and run `gh auth login` if needed.".into());
+        }
+        Err(error) => return Err(format!("Could not start GitHub CLI: {error}")),
+    };
     if !output.status.success() {
         let message = String::from_utf8_lossy(&output.stderr).trim().chars().take(2000).collect::<String>();
-        return Err(if message.is_empty() { "GitHub CLI request failed".into() } else { message });
+        return Err(if message.is_empty() {
+            "GitHub CLI request failed. Verify `gh auth status` and the repository's GitHub remote.".into()
+        } else {
+            message
+        });
     }
     String::from_utf8(output.stdout).map_err(|_| "Invalid GitHub CLI response encoding".into())
 }

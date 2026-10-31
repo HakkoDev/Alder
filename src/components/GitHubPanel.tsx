@@ -22,6 +22,7 @@ export function GitHubPanel({ path, onCounts }: { path: string; onCounts?: (prs:
     const [visibleCount, setVisibleCount] = useState(40);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [authGuide, setAuthGuide] = useState(false);
     const [selected, setSelected] = useState<number | null>(null);
     const [selectedIssue, setSelectedIssue] = useState<number | null>(null);
     const [issueDetail, setIssueDetail] = useState<GitHubIssueDetail | null>(null);
@@ -229,7 +230,30 @@ export function GitHubPanel({ path, onCounts }: { path: string; onCounts?: (prs:
                         Install the GitHub CLI, run <code>gh auth login</code> in your terminal, and ensure this repository has a GitHub remote. Alder never
                         stores your GitHub token.
                     </p>
+                    <p className="small-muted">
+                        {error.toLowerCase().includes("not found") || error.toLowerCase().includes("not installed")
+                            ? "GitHub CLI was not detected. Install it and restart Alder so the installed application can discover it."
+                            : error.toLowerCase().includes("auth") || error.toLowerCase().includes("login")
+                              ? "GitHub CLI is present, but this account needs authentication or renewed access."
+                              : "Check the repository's GitHub remote, connectivity and GitHub CLI authentication."}
+                    </p>
+                    {authGuide && (
+                        <div className="content-card">
+                            <strong>Connect GitHub CLI</strong>
+                            <p>Open PowerShell or your terminal and run:</p>
+                            <pre>gh auth login</pre>
+                            <p>Then verify with:</p>
+                            <pre>gh auth status</pre>
+                            <p>Return to Alder and select Retry connection. Credentials stay with GitHub CLI.</p>
+                        </div>
+                    )}
                     <div className="github-connect-actions">
+                        <Button
+                            variant="outline"
+                            onClick={() => setAuthGuide((value) => !value)}
+                        >
+                            {authGuide ? "Hide setup" : "Setup / reconnect"}
+                        </Button>
                         <Button
                             variant="outline"
                             onClick={() => void load()}
