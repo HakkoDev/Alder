@@ -22,6 +22,8 @@ export interface Change {
     staged: boolean;
     unstaged: boolean;
     untracked: boolean;
+    additions: number;
+    deletions: number;
 }
 export interface Commit {
     hash: string;

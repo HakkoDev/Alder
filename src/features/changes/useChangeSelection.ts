@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useShallow } from "zustand/react/shallow";
 import type { Change } from "../../lib/types";
 import { useChangesStore } from "./changes-store";
@@ -34,8 +34,8 @@ export function useChangeSelection(listedChanges: Change[]) {
         [changeSort, changeDirection],
     );
 
-    const staged = orderChanges(listedChanges.filter((change) => change.staged));
-    const unstaged = orderChanges(listedChanges.filter((change) => change.unstaged));
+    const staged = useMemo(() => orderChanges(listedChanges.filter((change) => change.staged)), [listedChanges, orderChanges]);
+    const unstaged = useMemo(() => orderChanges(listedChanges.filter((change) => change.unstaged)), [listedChanges, orderChanges]);
 
     const selectChange = (change: Change, stagedSide: boolean, shift = false) => {
         const side = stagedSide ? "staged" : "working";

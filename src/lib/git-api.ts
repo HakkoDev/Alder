@@ -31,6 +31,11 @@ export interface GitHubIssue {
     url: string;
     updatedAt: string;
 }
+export interface GitHubIssueDetail extends GitHubIssue {
+    body: string;
+    state: string;
+    comments: { author: { login: string }; body: string }[];
+}
 export interface GitHubPRDetail extends GitHubPullRequest {
     body: string;
     mergeable: string;
@@ -71,6 +76,7 @@ export const github = {
     repository: (path: string) => call<GitHubRepository>("github_repository", { path }),
     pulls: (path: string) => call<GitHubPullRequest[]>("github_pull_requests", { path }),
     issues: (path: string) => call<GitHubIssue[]>("github_issues", { path }),
+    issueDetail: (path: string, number: number) => call<GitHubIssueDetail>("github_issue_detail", { path, number }),
     detail: (path: string, number: number) => call<GitHubPRDetail>("github_pr_detail", { path, number }),
     checks: (path: string, number: number) => call<{ statusCheckRollup: GitHubPullRequest["statusCheckRollup"] }>("github_pr_checks", { path, number }),
     create: (path: string, title: string, body: string, base: string, draft: boolean) => call<string>("github_pr_create", { path, title, body, base, draft }),
@@ -92,11 +98,19 @@ export const git = {
     history: (path: string, limit = 150) => call<Commit[]>("commit_history", { path, limit }),
     branches: (path: string) => call<Branch[]>("list_branches", { path }),
     diff: (path: string, file: string, staged = false) => call<string>("file_diff", { path, file, staged }),
+    trashFile: (path: string, file: string) => call<void>("trash_file", { path, file }),
+    ignoreFile: (path: string, file: string, localOnly: boolean) => call<void>("ignore_file", { path, file, localOnly }),
+    openFile: (path: string, file: string) => call<void>("open_change_file", { path, file }),
+    revealChangeFile: (path: string, file: string) => call<void>("reveal_change_file", { path, file }),
+    detectEditors: () => call<{ id: string; label: string; available: boolean }[]>("detect_editors"),
+    openInEditor: (path: string, file: string, editor: string) => call<void>("open_in_editor", { path, file, editor }),
     stage: (path: string, file: string) => call<void>("stage_file", { path, file }),
     unstage: (path: string, file: string) => call<void>("unstage_file", { path, file }),
     applyDiffSelection: (path: string, file: string, staged: boolean, hunk: number, line: number | null = null) =>
         call<void>("apply_diff_selection", { path, file, staged, hunk, line }),
     stageAll: (path: string) => call<void>("stage_all", { path }),
+    changesBulkAction: (path: string, action: "unstage-all" | "discard-tracked" | "restore-all" | "trash-untracked" | "stash-pop") =>
+        call<string>("changes_bulk_action", { path, action }),
     commit: (path: string, message: string, amend = false, tracked = false, skipHooks = false, signoff = false) =>
         call<string>("create_commit", { path, message, amend, tracked, skipHooks, signoff }),
     switchBranch: (path: string, name: string) => call<void>("switch_branch", { path, name }),

@@ -7,7 +7,7 @@ export const en = {
     "nav.branches": "Branches",
     "nav.worktrees": "Worktrees",
     "nav.operations": "Git operations",
-    "nav.pullRequests": "Pull requests",
+    "nav.pullRequests": "GitHub",
     "nav.agents": "Agent sessions",
     "changes.title": "Working changes",
     "changes.sort": "Sort changes",

@@ -29,7 +29,7 @@ test("desktop commands are wired and Git is invoked as argv, not shell interpola
         assert.match(rust, new RegExp(`\\b${command}\\b`));
         assert.ok(api.includes(`"${command}"`), `API missing ${command}`);
     }
-    assert.match(rust, /Command::new\("git"\)/);
+    assert.match(rust, /crate::process::command\("git"\)/);
     assert.doesNotMatch(rust, /\.shell\s*\(/);
     assert.match(rust, /"pull",\s*"--ff-only"/);
 });

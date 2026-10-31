@@ -1,13 +1,13 @@
 use crate::*;
 
 pub(crate) fn git_raw(args: &[&str]) -> Result<Output, String> {
-    Command::new("git")
+    crate::process::command("git")
         .args(args)
         .output()
         .map_err(|e| format!("Could not execute Git: {e}. Install Git and add it to PATH."))
 }
 pub(crate) fn git_run(path: &Path, args: &[&str]) -> Result<String, String> {
-    let output = Command::new("git").arg("-C").arg(path).args(args).output().map_err(err)?;
+    let output = crate::process::command("git").arg("-C").arg(path).args(args).output().map_err(err)?;
     if !output.status.success() {
         let error = String::from_utf8_lossy(&output.stderr).trim().to_owned();
         return Err(if error.is_empty() {
@@ -19,7 +19,7 @@ pub(crate) fn git_run(path: &Path, args: &[&str]) -> Result<String, String> {
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
 pub(crate) fn git_bytes(path: &Path, args: &[&str]) -> Result<Vec<u8>, String> {
-    let o = Command::new("git").arg("-C").arg(path).args(args).output().map_err(err)?;
+    let o = crate::process::command("git").arg("-C").arg(path).args(args).output().map_err(err)?;
     if !o.status.success() {
         return Err(String::from_utf8_lossy(&o.stderr).trim().chars().take(1500).collect());
     }

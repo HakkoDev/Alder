@@ -26,7 +26,16 @@ function lastRepository() {
 
 export const useNavigationStore = create<NavigationState>()((set) => ({
     activeRepoId: lastRepository(),
-    view: "overview",
+    view: (() => {
+        try {
+            const saved = localStorage.getItem("alder.last-view");
+            return (
+                (["overview", "changes", "history", "branches", "worktrees", "operations", "pulls", "agents"] as const).find((v) => v === saved) ?? "overview"
+            );
+        } catch {
+            return "overview";
+        }
+    })(),
     workspaceFilter: "all",
     search: "",
     settings: false,
@@ -42,7 +51,14 @@ export const useNavigationStore = create<NavigationState>()((set) => ({
             }
             return { activeRepoId };
         }),
-    setView: (view) => set({ view }),
+    setView: (view) => {
+        try {
+            localStorage.setItem("alder.last-view", view);
+        } catch {
+            /* optional storage */
+        }
+        set({ view });
+    },
     setWorkspaceFilter: (workspaceFilter) => set({ workspaceFilter }),
     setSearch: (search) => set({ search }),
     setSettings: (settings) => set({ settings }),

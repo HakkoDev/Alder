@@ -42,7 +42,37 @@ pub(crate) fn changes(path: &Path) -> Result<Vec<Change>, String> {
             staged: x != ' ' && !untracked,
             unstaged: y != ' ' || untracked,
             untracked,
+            additions: 0,
+            deletions: 0,
         });
+    }
+    let paths: std::collections::HashMap<String, usize> = out.iter().enumerate().map(|(index, c)| (c.path.clone(), index)).collect();
+    // Two bounded Git processes supply diff counts for all changed files. Do not
+    // run one Git process per row: that makes the Changes tab scale terribly.
+    for staged in [false, true] {
+        let mut args = vec!["diff", "--numstat", "-z", "--no-ext-diff"];
+        if staged {
+            args.push("--cached");
+        }
+        if let Ok(raw) = git_bytes(path, &args) {
+            for entry in raw.split(|byte| *byte == 0) {
+                let mut parts = entry.splitn(3, |byte| *byte == b'\t');
+                let (Some(plus), Some(minus), Some(name)) = (parts.next(), parts.next(), parts.next()) else {
+                    continue;
+                };
+                let (Ok(plus), Ok(minus)) = (std::str::from_utf8(plus), std::str::from_utf8(minus)) else {
+                    continue;
+                };
+                let (Ok(additions), Ok(deletions)) = (plus.parse::<usize>(), minus.parse::<usize>()) else {
+                    continue;
+                };
+                let name = String::from_utf8_lossy(name);
+                if let Some(change) = paths.get(name.as_ref()).and_then(|index| out.get_mut(*index)) {
+                    change.additions += additions;
+                    change.deletions += deletions;
+                }
+            }
+        }
     }
     Ok(out)
 }

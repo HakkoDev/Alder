@@ -20,13 +20,13 @@ test("GitHub commands are registered and use argv-only gh process", () => {
         assert.match(core, new RegExp("fn " + s + "\\s*\\("));
         assert.match(core.slice(core.lastIndexOf("generate_handler!")), new RegExp(s));
     }
-    assert.match(core, /Command::new\("gh"\)/);
+    assert.match(core, /crate::process::command\("gh"\)/);
     assert.match(core, /cmd\s*\.args\(args\)/);
     assert.doesNotMatch(core, /sh -c|cmd \/C/);
 });
 test("GitHub UI uses native invoke and error states", () => {
     for (const s of ["github_auth", "github_pull_requests", "github_pr_create", "github_pr_review"]) assert.ok(api.includes('"' + s + '"'));
     assert.match(ui, /GitHub connection unavailable/);
-    assert.match(ui, /Promise\.allSettled/);
+    assert.match(ui, /requestVersion\.current/);
     assert.match(ui, /submitReview/);
 });

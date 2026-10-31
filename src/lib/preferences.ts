@@ -10,6 +10,7 @@ export interface Preferences {
     loadOnlineFonts: boolean;
     autoFetch: boolean;
     showHiddenRepositories: boolean;
+    preferredEditor: "auto" | "zed" | "code";
 }
 export const DEFAULT_PREFERENCES: Readonly<Preferences> = Object.freeze({
     themeId: "alder",
@@ -19,6 +20,7 @@ export const DEFAULT_PREFERENCES: Readonly<Preferences> = Object.freeze({
     loadOnlineFonts: false,
     autoFetch: false,
     showHiddenRepositories: false,
+    preferredEditor: "auto",
 });
 const KEY = "alder.preferences.v2";
 const LEGACY_KEY = "alder.preferences.v1";
@@ -32,6 +34,7 @@ export function normalizePreferences(input: unknown): Preferences {
         loadOnlineFonts: v.loadOnlineFonts === true,
         autoFetch: v.autoFetch === true,
         showHiddenRepositories: v.showHiddenRepositories === true,
+        preferredEditor: v.preferredEditor === "zed" || v.preferredEditor === "code" ? v.preferredEditor : "auto",
     };
 }
 function read(): Preferences {

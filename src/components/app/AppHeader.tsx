@@ -20,7 +20,7 @@ export function AppHeader(props: Props) {
                 <div className="crumb">
                     <span>{activeRepo && view !== "overview" ? activeRepo.name : "Workspace"}</span>
                     <ChevronRight size={14} />
-                    <strong>{view === "pulls" ? "Pull requests" : view === "agents" ? "Agent sessions" : formatName(view)}</strong>
+                    <strong>{view === "pulls" ? "GitHub" : view === "agents" ? "Agent sessions" : formatName(view)}</strong>
                 </div>
             </div>
             <div className="topbar-actions">

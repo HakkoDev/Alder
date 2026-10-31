@@ -16,6 +16,7 @@ import type { Change, Repository } from "@/lib/types";
 import { useNavigationStore } from "./navigation-store";
 
 const NATIVE = isTauri();
+const EMPTY_CHANGES: Change[] = [];
 
 export function useAppController() {
     const preferences = usePreferences();
@@ -88,8 +89,8 @@ export function useAppController() {
     const { status, history, branches, worktrees, stashes, reflog, operation, remotes, diff, loadingRepo, loadingDiff, loadingHistory, loadSelected } =
         useRepositoryData({ activeRepoPath: activeRepo?.path ?? null, activeFile, stagedDiff, report });
     const selectRepo = (r: Repository) => {
+        // Switching repositories changes the context, not the user's current view.
         setActiveRepoId(r.id);
-        setView("changes");
     };
     const perform = async (label: string, task: () => Promise<unknown>, opts?: { reload?: boolean }) => {
         if (busy) return;
@@ -123,10 +124,10 @@ export function useAppController() {
     const changed = repos.filter((r) => r.modified + r.staged > 0).length;
     const ahead = repos.filter((r) => r.ahead > 0).length;
     const behind = repos.filter((r) => r.behind > 0).length;
-    const { listedChanges, staged, unstaged, selectedFiles, setSelectedFiles, selectChange } = useChangeSelection(status?.changes ?? []);
+    const { listedChanges, staged, unstaged, selectedFiles, setSelectedFiles, selectChange } = useChangeSelection(status?.changes ?? EMPTY_CHANGES);
     // biome-ignore lint/correctness/useExhaustiveDependencies: Repository identity intentionally resets local selections.
     useEffect(() => {
-        setGithubCounts({ prs: null, issues: null });
+        setGithubCounts((previous) => (previous.prs === null && previous.issues === null ? previous : { prs: null, issues: null }));
         resetSelection();
     }, [activeRepo?.path, resetSelection]);
     const chooseFile = (item: Change, selectedStaged: boolean) => {
@@ -176,7 +177,6 @@ export function useAppController() {
                 setRepos((previous) => previous.filter((item) => item.id !== repo.id));
                 if (activeRepoId === repo.id) {
                     setActiveRepoId(null);
-                    setView("overview");
                 }
                 return `${repo.name} removed from Alder. The repository on disk was not modified.`;
             },

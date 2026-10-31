@@ -5,32 +5,37 @@ export function DiffText({
     staged,
     disabled,
     onSelect,
+    range,
 }: {
     text: string;
     staged: boolean;
     disabled: boolean;
     onSelect: (hunk: number, line: number | null) => void;
+    range: { start: number; end: number; before: number; after: number };
 }) {
-    const lines = useMemo(
-        () =>
-            text
-                .split("\n")
-                .slice(0, 3000)
-                .map((line, offset) => ({ line, offset })),
-        [text],
-    );
-    let hunk = -1;
-    let hunkLine = 0;
+    const { lines, truncated } = useMemo(() => {
+        const raw = text.split("\n");
+        let hunk = -1;
+        let hunkLine = 0;
+        const all = raw.slice(0, 3000).map((line, offset) => {
+            if (line.startsWith("@@ ")) {
+                hunk++;
+                hunkLine = 0;
+            } else if (hunk >= 0) hunkLine++;
+            return { line, offset, hunk, hunkLine };
+        });
+        return { lines: all, truncated: raw.length > 3000 };
+    }, [text]);
     return (
         <section
             className="diff-lines"
             aria-label="File diff with partial staging controls"
         >
-            {lines.map(({ line, offset: i }) => {
-                if (line.startsWith("@@ ")) {
-                    hunk++;
-                    hunkLine = 0;
-                } else if (hunk >= 0) hunkLine++;
+            <div
+                style={{ height: range.before }}
+                aria-hidden="true"
+            />
+            {lines.slice(range.start, range.end).map(({ line, offset: i, hunk, hunkLine }) => {
                 const change = hunk >= 0 && ((line.startsWith("+") && !line.startsWith("+++")) || (line.startsWith("-") && !line.startsWith("---")));
                 const heading = line.startsWith("@@ ");
                 const currentHunk = hunk,
@@ -71,7 +76,11 @@ export function DiffText({
                     </div>
                 );
             })}
-            {text.split("\n").length > 3000 ? <div className="truncated">Only the first 3,000 diff lines are shown.</div> : null}
+            <div
+                style={{ height: range.after }}
+                aria-hidden="true"
+            />
+            {truncated ? <div className="truncated">Only the first 3,000 diff lines are shown.</div> : null}
         </section>
     );
 }

@@ -3,7 +3,7 @@ use serde::Serialize;
 use std::fs;
 use std::io::Write;
 use std::path::{Component, Path, PathBuf};
-use std::process::{Command, Output, Stdio};
+use std::process::{Output, Stdio};
 use tauri::{Manager, State};
 use uuid::Uuid;
 
@@ -41,6 +41,8 @@ struct Change {
     staged: bool,
     unstaged: bool,
     untracked: bool,
+    additions: usize,
+    deletions: usize,
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -72,7 +74,9 @@ struct Branch {
 
 mod git;
 mod github;
+mod process;
 mod repository;
+mod updater;
 
 use git::*;
 use repository::*;
@@ -80,7 +84,14 @@ use repository::*;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_process::init())
         .setup(|app| {
+            // Development builds have no signing key or update endpoint.
+            // The updater plugin rejects a missing/null config at startup.
+            // Register it only for configured signed release builds.
+            if updater::is_updater_configured(app.config()) {
+                app.handle().plugin(tauri_plugin_updater::Builder::new().build())?;
+            }
             let dir = app.path().app_data_dir()?;
             fs::create_dir_all(&dir)?;
             let db = dir.join("alder.sqlite");
@@ -89,6 +100,8 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            process::open_external_url,
+            updater::updater_configuration,
             repository::commands::git_version,
             repository::commands::list_repositories,
             repository::commands::add_repository,
@@ -103,9 +116,16 @@ pub fn run() {
             git::history::commit_history,
             git::history::list_branches,
             git::changes::file_diff,
+            git::changes::trash_file,
+            git::changes::ignore_file,
+            git::changes::open_change_file,
+            git::changes::reveal_change_file,
+            git::changes::detect_editors,
+            git::changes::open_in_editor,
             git::changes::stage_file,
             git::changes::unstage_file,
             git::changes::stage_all,
+            git::changes::changes_bulk_action,
             git::changes::apply_diff_selection,
             git::changes::create_commit,
             git::remotes::switch_branch,
@@ -138,6 +158,7 @@ pub fn run() {
             github::github_repository,
             github::github_pull_requests,
             github::github_issues,
+            github::github_issue_detail,
             github::github_pr_detail,
             github::github_pr_create,
             github::github_pr_review,

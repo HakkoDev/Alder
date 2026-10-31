@@ -3,7 +3,7 @@ use crate::*;
 // GitHub integration deliberately delegates credentials to GitHub CLI (`gh`).
 // No OAuth secret or access token is stored in Alder or passed to the renderer.
 pub(crate) fn github_cli(root: Option<&Path>, args: &[&str]) -> Result<String, String> {
-    let mut cmd = Command::new("gh");
+    let mut cmd = crate::process::command("gh");
     if let Some(path) = root {
         cmd.current_dir(path);
     }
@@ -184,4 +184,22 @@ pub(crate) fn github_tags(path: String, page: u32) -> Result<serde_json::Value, 
 pub(crate) fn github_rate_limit(path: String) -> Result<serde_json::Value, String> {
     let root = repo_root(&path)?;
     github_json(&root, &["api", "rate_limit"])
+}
+
+#[tauri::command]
+pub(crate) fn github_issue_detail(path: String, number: u32) -> Result<serde_json::Value, String> {
+    if number == 0 {
+        return Err("Invalid issue number".into());
+    }
+    let root = repo_root(&path)?;
+    github_json(
+        &root,
+        &[
+            "issue",
+            "view",
+            &number.to_string(),
+            "--json",
+            "number,title,body,url,state,author,labels,comments,createdAt,updatedAt",
+        ],
+    )
 }

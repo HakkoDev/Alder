@@ -70,6 +70,24 @@ export function Settings({ preferences: p }: { preferences: Preferences }) {
                 </label>
             </div>
             <div className="settings-section">
+                <h3>External editor</h3>
+                <div className="setting-row">
+                    <span>
+                        Open in Editor <small>Auto detects Zed first, then VS Code. Editors must be on PATH.</small>
+                    </span>
+                    <Select
+                        label="Preferred editor"
+                        value={p.preferredEditor}
+                        onValueChange={(v) => updatePreferences({ preferredEditor: v as Preferences["preferredEditor"] })}
+                        options={[
+                            { value: "auto", label: "Auto (Zed, then VS Code)" },
+                            { value: "zed", label: "Zed" },
+                            { value: "code", label: "Visual Studio Code" },
+                        ]}
+                    />
+                </div>
+            </div>
+            <div className="settings-section">
                 <div className="settings-label">
                     <h3>Color theme</h3>
                     <p>Choose a color theme for Alder.</p>

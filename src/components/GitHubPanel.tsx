@@ -1,7 +1,9 @@
 import { ArrowUpRight, CircleAlert, CircleDot, GitBranch, GitPullRequest, LoaderCircle, Plus, RefreshCw, ShieldCheck } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { type GitHubIssue, type GitHubPRDetail, type GitHubPullRequest, type GitHubRepository, github } from "../lib/git-api";
+import { type GitHubIssue, type GitHubIssueDetail, type GitHubPRDetail, type GitHubPullRequest, type GitHubRepository, github } from "../lib/git-api";
+import { openGitHubUrl } from "../lib/external";
+import { MarkdownBody } from "./github/MarkdownBody";
 import { GitHubExtras } from "./GitHubExtras";
 import { Button } from "./ui/button";
 import * as Dialog from "./ui/dialog";
@@ -10,23 +12,20 @@ import { Skeleton } from "./ui/skeleton";
 
 type Tab = "prs" | "issues";
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
-const external = (url: string) => {
-    try {
-        const u = new URL(url);
-        if (u.protocol === "https:" && (u.hostname === "github.com" || u.hostname.endsWith(".github.com")))
-            window.open(u.toString(), "_blank", "noopener,noreferrer");
-    } catch {
-        /* invalid provider URL */
-    }
-};
+const external = (url: string) => void openGitHubUrl(url);
 export function GitHubPanel({ path, onCounts }: { path: string; onCounts?: (prs: number | null, issues: number | null) => void }) {
     const [repo, setRepo] = useState<GitHubRepository | null>(null);
     const [prs, setPrs] = useState<GitHubPullRequest[]>([]);
     const [issues, setIssues] = useState<GitHubIssue[]>([]);
     const [tab, setTab] = useState<Tab>("prs");
+    const [showActivity, setShowActivity] = useState(false);
+    const [visibleCount, setVisibleCount] = useState(40);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [selected, setSelected] = useState<number | null>(null);
+    const [selectedIssue, setSelectedIssue] = useState<number | null>(null);
+    const [issueDetail, setIssueDetail] = useState<GitHubIssueDetail | null>(null);
+    const [issueLoading, setIssueLoading] = useState(false);
     const [detail, setDetail] = useState<GitHubPRDetail | null>(null);
     const [detailLoading, setDetailLoading] = useState(false);
     const [creating, setCreating] = useState(false);
@@ -37,42 +36,77 @@ export function GitHubPanel({ path, onCounts }: { path: string; onCounts?: (prs:
     const [review, setReview] = useState("");
     const [busy, setBusy] = useState(false);
     const [checkoutLocation, setCheckoutLocation] = useState("");
+    const requestVersion = useRef(0);
+    const onCountsRef = useRef(onCounts);
+    useEffect(() => {
+        onCountsRef.current = onCounts;
+    }, [onCounts]);
     const load = useCallback(async () => {
+        const version = ++requestVersion.current;
         setLoading(true);
         setError("");
-        onCounts?.(null, null);
         try {
             await github.auth();
             const r = await github.repository(path);
+            if (version !== requestVersion.current) return;
             setRepo(r);
             setBase(r.defaultBranchRef?.name || "main");
-            const [p, i] = await Promise.allSettled([github.pulls(path), github.issues(path)]);
-            if (p.status === "fulfilled") {
-                setPrs(p.value);
+            // A single on-demand list request rather than loading all GitHub views at once.
+            if (tab === "prs") {
+                const result = await github.pulls(path);
+                if (version !== requestVersion.current) return;
+                setPrs(result);
+                onCountsRef.current?.(result.length, null);
             } else {
-                setPrs([]);
-                toast.error(`Pull requests: ${message(p.reason)}`);
+                const result = await github.issues(path);
+                if (version !== requestVersion.current) return;
+                setIssues(result);
+                onCountsRef.current?.(null, result.length);
             }
-            if (i.status === "fulfilled") {
-                setIssues(i.value);
-            } else {
-                setIssues([]);
-                toast.error(`Issues: ${message(i.reason)}`);
-            }
-            onCounts?.(p.status === "fulfilled" ? p.value.length : null, i.status === "fulfilled" ? i.value.length : null);
         } catch (e) {
-            setRepo(null);
-            setPrs([]);
-            setIssues([]);
+            if (version !== requestVersion.current) return;
             setError(message(e));
         } finally {
-            setLoading(false);
+            if (version === requestVersion.current) setLoading(false);
         }
-    }, [path, onCounts]);
+    }, [path, tab]);
     useEffect(() => {
         void load();
-        return () => onCounts?.(null, null);
-    }, [load, onCounts]);
+        return () => {
+            requestVersion.current += 1;
+        };
+    }, [load]);
+    useEffect(() => {
+        setVisibleCount(40);
+    }, [tab, path]);
+    useEffect(() => {
+        setSelected(null);
+        setSelectedIssue(null);
+        setShowActivity(false);
+    }, [path]);
+    useEffect(() => {
+        let cancelled = false;
+        if (selectedIssue === null) {
+            setIssueDetail(null);
+            return;
+        }
+        setIssueLoading(true);
+        setIssueDetail(null);
+        void github
+            .issueDetail(path, selectedIssue)
+            .then((value) => {
+                if (!cancelled) setIssueDetail(value);
+            })
+            .catch((error) => {
+                if (!cancelled) toast.error(message(error));
+            })
+            .finally(() => {
+                if (!cancelled) setIssueLoading(false);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [path, selectedIssue]);
     useEffect(() => {
         let cancelled = false;
         if (selected === null) {
@@ -204,7 +238,7 @@ export function GitHubPanel({ path, onCounts }: { path: string; onCounts?: (prs:
                         </Button>
                         <Button
                             variant="outline"
-                            onClick={() => window.open("https://cli.github.com/manual/", "_blank", "noopener,noreferrer")}
+                            onClick={() => void openGitHubUrl("https://cli.github.com/manual/")}
                         >
                             GitHub CLI documentation <ArrowUpRight size={14} />
                         </Button>
@@ -216,7 +250,7 @@ export function GitHubPanel({ path, onCounts }: { path: string; onCounts?: (prs:
                         <Button
                             variant="ghost"
                             title="Open GitHub CLI documentation"
-                            onClick={() => window.open("https://cli.github.com/manual/", "_blank", "noopener,noreferrer")}
+                            onClick={() => void openGitHubUrl("https://cli.github.com/manual/")}
                         >
                             CLI docs <ArrowUpRight size={14} />
                         </Button>
@@ -243,7 +277,7 @@ export function GitHubPanel({ path, onCounts }: { path: string; onCounts?: (prs:
                     </div>
                     {tab === "prs" ? (
                         prs.length ? (
-                            prs.map((pr) => (
+                            prs.slice(0, visibleCount).map((pr) => (
                                 <button
                                     type="button"
                                     key={pr.number}
@@ -264,12 +298,12 @@ export function GitHubPanel({ path, onCounts }: { path: string; onCounts?: (prs:
                             <p className="github-empty">No open pull requests.</p>
                         )
                     ) : issues.length ? (
-                        issues.map((issue) => (
+                        issues.slice(0, visibleCount).map((issue) => (
                             <button
                                 type="button"
                                 key={issue.number}
                                 className="github-item"
-                                onClick={() => external(issue.url)}
+                                onClick={() => setSelectedIssue(issue.number)}
                             >
                                 <CircleDot size={17} />
                                 <div>
@@ -286,7 +320,65 @@ export function GitHubPanel({ path, onCounts }: { path: string; onCounts?: (prs:
                     )}
                 </>
             )}
-            {!loading && !error && repo && <GitHubExtras path={path} />}
+            {!loading && !error && (tab === "prs" ? prs.length : issues.length) > visibleCount && (
+                <div className="github-load-more">
+                    <Button
+                        variant="outline"
+                        onClick={() => setVisibleCount((count) => count + 40)}
+                    >
+                        Show 40 more
+                    </Button>
+                </div>
+            )}
+            {!loading && !error && repo && (
+                <section className="github-activity-panel">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowActivity((value) => !value)}
+                    >
+                        {showActivity ? "Hide repository activity" : "Show notifications, releases, tags and API limits"}
+                    </Button>
+                    {showActivity && <GitHubExtras path={path} />}
+                </section>
+            )}
+            <Dialog.Dialog
+                open={selectedIssue !== null}
+                onOpenChange={(open) => {
+                    if (!open) setSelectedIssue(null);
+                }}
+            >
+                <Dialog.DialogContent className="github-dialog github-detail-dialog">
+                    <Dialog.DialogHeader>
+                        <Dialog.DialogTitle>{issueDetail ? `#${issueDetail.number} ${issueDetail.title}` : "Issue details"}</Dialog.DialogTitle>
+                        <Dialog.DialogDescription>Issue description and discussion</Dialog.DialogDescription>
+                    </Dialog.DialogHeader>
+                    {issueLoading ? (
+                        <Skeleton className="h-40" />
+                    ) : issueDetail ? (
+                        <div className="github-detail">
+                            <MarkdownBody body={issueDetail.body} />
+                            {issueDetail.comments?.map((comment, index) => (
+                                <div
+                                    className="github-comment"
+                                    key={index}
+                                >
+                                    <strong>{comment.author?.login || "Contributor"}</strong>
+                                    <MarkdownBody body={comment.body} />
+                                </div>
+                            ))}
+                            <Button
+                                variant="outline"
+                                onClick={() => external(issueDetail.url)}
+                            >
+                                Open issue on GitHub <ArrowUpRight size={14} />
+                            </Button>
+                        </div>
+                    ) : (
+                        <p>Unable to load issue details.</p>
+                    )}
+                </Dialog.DialogContent>
+            </Dialog.Dialog>
             <Dialog.Dialog
                 open={creating}
                 onOpenChange={setCreating}
@@ -360,7 +452,7 @@ export function GitHubPanel({ path, onCounts }: { path: string; onCounts?: (prs:
                         <Skeleton className="h-40" />
                     ) : detail ? (
                         <div className="github-detail">
-                            <p>{detail.body || "No description"}</p>
+                            <MarkdownBody body={detail.body} />
                             <div className="github-checks">
                                 <strong>
                                     <ShieldCheck size={15} /> Checks

@@ -3068,3 +3068,262 @@ html[data-density="compact"] .file-row .file-select {
         display: none;
     }
 }
+
+/* Windowed changes list: stable heights keep scroll position accurate. */
+.virtual-file-row {
+    height: 40px;
+    min-height: 40px;
+    box-sizing: border-box;
+}
+.virtual-file-row .file-row {
+    height: 36px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+.diff-lines .diff-line {
+    height: 20px;
+    min-height: 20px;
+    line-height: 20px;
+}
+
+/* Compact Zed-inspired Changes rows: status colors and inline numstat counters. */
+.file-row .file-row-inner {
+    width: 100%;
+}
+.file-row .file-select {
+    gap: 7px;
+    padding-inline: 4px;
+}
+.file-row .file-select span {
+    flex: 0 1 auto;
+    min-width: 0;
+}
+.file-row .file-parent-path {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 10px;
+    color: var(--muted-foreground);
+    flex: 1 1 auto;
+    min-width: 0;
+    text-align: right;
+}
+.file-row-modified .file-status-icon {
+    color: #e5a253;
+}
+.file-row-added .file-status-icon {
+    color: #65bc83;
+}
+.file-row-deleted .file-status-icon {
+    color: #e77378;
+}
+.file-change-counts {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    padding: 0 7px 0 2px;
+}
+.file-additions {
+    color: #65bc83;
+}
+.file-deletions {
+    color: #e77378;
+}
+
+/* State-aware Changes split action, shared with the current theme tokens. */
+.changes-split-action {
+    display: inline-flex;
+    align-items: stretch;
+    min-width: 0;
+}
+.selection-toolbar .changes-primary-action {
+    border-radius: 6px 0 0 6px;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border-color: var(--primary);
+    padding-inline: 12px;
+    font-size: 12px;
+}
+.selection-toolbar .changes-action-toggle {
+    border-radius: 0 6px 6px 0;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border-color: var(--primary);
+    border-left: 1px solid var(--border);
+    padding-inline: 7px;
+}
+.changes-actions-menu {
+    min-width: 245px;
+}
+.changes-action-shortcut {
+    margin-left: auto;
+    padding-left: 18px;
+    color: var(--muted-foreground);
+    font-size: 11px;
+}
+.selection-toolbar .changes-clear-selection {
+    margin-left: auto;
+}
+
+/* Unified, compact scrollbars across desktop panes and portaled dialogs. */
+:where(*) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+:where(*::-webkit-scrollbar) {
+    width: 9px;
+    height: 9px;
+}
+:where(*::-webkit-scrollbar-track) {
+    background: transparent;
+}
+:where(*::-webkit-scrollbar-thumb) {
+    background: var(--border);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    border-radius: 999px;
+}
+:where(*::-webkit-scrollbar-thumb:hover) {
+    background: var(--muted-foreground);
+    background-clip: padding-box;
+}
+:where(*::-webkit-scrollbar-corner) {
+    background: transparent;
+}
+:where(.main-body, .sidebar-scroll, .github-dialog, .github-detail, .github-checks) {
+    min-height: 0;
+    scrollbar-gutter: stable;
+}
+.github-panel {
+    min-width: 0;
+    max-width: 100%;
+}
+.github-detail-dialog {
+    width: min(850px, calc(100vw - 36px));
+}
+.github-detail {
+    min-height: 0;
+    overflow-wrap: anywhere;
+}
+.github-detail-dialog .github-detail {
+    overflow-y: auto;
+    padding-right: 8px;
+}
+.github-activity-panel {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+}
+.github-comment {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+}
+.github-comment > strong {
+    display: block;
+    margin-bottom: 9px;
+    font-size: 12px;
+}
+.github-markdown {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    line-height: 1.6;
+    font-size: 13px;
+}
+.github-markdown :is(p, ul, ol, pre, blockquote, table) {
+    margin: 9px 0;
+}
+.github-markdown :is(ul, ol) {
+    padding-left: 22px;
+}
+.github-markdown :is(h1, h2, h3, h4) {
+    font-weight: 650;
+    margin: 16px 0 8px;
+}
+.github-markdown a {
+    color: var(--primary);
+    text-decoration: underline;
+}
+.github-markdown pre {
+    background: var(--muted);
+    padding: 12px;
+    border-radius: 8px;
+    overflow-x: auto;
+}
+.github-markdown :not(pre) > code {
+    background: var(--muted);
+    padding: 1px 4px;
+    border-radius: 4px;
+}
+.github-markdown blockquote {
+    padding: 2px 12px;
+    border-left: 3px solid var(--border);
+    color: var(--muted-foreground);
+}
+.github-markdown img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+}
+.github-markdown table {
+    border-collapse: collapse;
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+}
+.github-markdown th,
+.github-markdown td {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+}
+.github-markdown input[type="checkbox"] {
+    accent-color: var(--primary);
+}
+.github-dialog .github-detail > p {
+    max-height: none;
+}
+
+/* Collapsible change groups and shadcn search popover. */
+.file-group-title {
+    gap: 4px;
+}
+.file-group-collapse {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 18px;
+    padding: 0 !important;
+    height: 19px;
+    color: var(--muted-foreground) !important;
+    cursor: pointer;
+}
+.file-group-collapse:hover {
+    color: var(--foreground) !important;
+}
+.file-group-select {
+    flex: 1;
+    min-width: 0;
+}
+.selection-toolbar .changes-clear-selection {
+    margin-left: auto;
+}
+.selection-toolbar .changes-search-trigger {
+    justify-content: center;
+    width: 29px;
+    height: 29px;
+    flex-shrink: 0;
+}
+.changes-file-search-popover {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    background: var(--popover, var(--surface)) !important;
+}
+.changes-file-search-popover input {
+    background: var(--background);
+}

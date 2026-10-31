@@ -1,3 +1,4 @@
+import { UpdateCenter, useAlderUpdater } from "@/components/updater/update-center";
 import { AppContent } from "@/components/app/AppContent";
 import { AppFooter } from "@/components/app/AppFooter";
 import { AppHeader } from "@/components/app/AppHeader";
@@ -14,6 +15,7 @@ import { RepositoryMenuItems } from "./features/repositories/components/Reposito
 import type { Repository } from "./lib/types";
 export default function App() {
     const app = useAppController();
+    const updater = useAlderUpdater();
     const repoMenu = (repo: Repository) => (
         <RepositoryMenuItems
             selectRepo={app.selectRepo}
@@ -112,7 +114,11 @@ export default function App() {
                     busy={app.busy}
                     submitModal={app.submitModal}
                 />
-                <SettingsDialog preferences={app.preferences} />
+                <SettingsDialog
+                    preferences={app.preferences}
+                    updater={updater}
+                />
+                <UpdateCenter updater={updater} />
                 <CommandPalette
                     paletteQuery={app.paletteQuery}
                     setPaletteQuery={app.setPaletteQuery}

@@ -1,3 +1,16 @@
+## Unreleased — Signed auto-updater integration
+
+- Added Morrow-equivalent signed Tauri v2 update checking, install progress, and relaunch for Alder.
+- Added Update Center with manual check in Settings and safe disabled state for unsigned development builds.
+- Registered Tauri updater/process plugins and least-privilege window capabilities.
+- Preserved existing GitHub Release publishing pipeline; documented signing configuration and build commands.
+
+## Unreleased — Windows child-process and external browser fixes
+
+- Route Git, gh and partial-staging child processes through a common Windows CREATE_NO_WINDOW helper.
+- Open GitHub documentation and GitHub URLs through a native Tauri command instead of window.open.
+- Add a Windows runtime console test and cross-platform source regressions.
+
 # Changelog
 
 Version tags identify source snapshots. Downloadable builds are available through [GitHub Releases](https://github.com/HakkoDev/Alder/releases).

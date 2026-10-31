@@ -93,7 +93,6 @@ export function AppSidebar(props: Props) {
                         <DropdownMenuItem
                             onSelect={() => {
                                 setWorkspaceFilter("all");
-                                setView("overview");
                             }}
                         >
                             <Layers3 size={15} /> All repositories <span className="menu-count">{repos.length}</span>
@@ -103,7 +102,6 @@ export function AppSidebar(props: Props) {
                                 key={w.id}
                                 onSelect={() => {
                                     setWorkspaceFilter(w.id);
-                                    setView("overview");
                                 }}
                             >
                                 <span
@@ -117,7 +115,6 @@ export function AppSidebar(props: Props) {
                         <DropdownMenuItem
                             onSelect={() => {
                                 setWorkspaceFilter("none");
-                                setView("overview");
                             }}
                         >
                             <FolderClosed size={15} /> Ungrouped <span className="menu-count">{repos.filter((r) => !r.workspaceId).length}</span>
@@ -173,7 +170,10 @@ export function AppSidebar(props: Props) {
                                     <button
                                         type="button"
                                         className={`repo-nav-item ${activeRepoId === repo.id ? "selected" : ""}`}
-                                        onClick={() => selectRepo(repo)}
+                                        onClick={(event) => {
+                                            event.stopPropagation();
+                                            selectRepo(repo);
+                                        }}
                                         title={repo.path}
                                     >
                                         <FolderGit2 size={15} />

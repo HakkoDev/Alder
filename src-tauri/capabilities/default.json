@@ -3,5 +3,14 @@
     "identifier": "main",
     "description": "Main window: local Git workflows and native folder selection",
     "windows": ["main"],
-    "permissions": ["core:default", "dialog:default", "core:event:allow-listen", "core:event:allow-unlisten", "core:event:allow-emit"]
+    "permissions": [
+        "core:default",
+        "dialog:default",
+        "core:event:allow-listen",
+        "core:event:allow-unlisten",
+        "core:event:allow-emit",
+        "updater:allow-check",
+        "updater:allow-download-and-install",
+        "process:allow-restart"
+    ]
 }

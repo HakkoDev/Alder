@@ -3,18 +3,12 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { type GitHubNotification, type GitHubRateLimit, type GitHubRelease, type GitHubTag, github } from "../lib/git-api";
 import { Button } from "./ui/button";
+import { openGitHubUrl } from "../lib/external";
 import { Skeleton } from "./ui/skeleton";
 
 type Section = "notifications" | "releases" | "tags" | "limits";
 const errorText = (error: unknown) => (error instanceof Error ? error.message : String(error));
-const githubLink = (value: string) => {
-    try {
-        const url = new URL(value);
-        if (url.protocol === "https:" && url.hostname === "github.com") window.open(url.href, "_blank", "noopener,noreferrer");
-    } catch {
-        /* ignore invalid links */
-    }
-};
+const githubLink = (value: string) => void openGitHubUrl(value);
 export function GitHubExtras({ path }: { path: string }) {
     const [section, setSection] = useState<Section>("notifications");
     const [page, setPage] = useState(1);
